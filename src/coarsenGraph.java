@@ -12,6 +12,9 @@ import java.lang.Math;
 import it.unimi.dsi.webgraph.labelling.ArcLabelledImmutableGraph;
 import it.unimi.dsi.webgraph.labelling.Label;
 
+/**
+ * Basic class to store edges
+ */
 class Edge{
     int val1;
     int val2;
@@ -21,6 +24,12 @@ class Edge{
     }
     public void print_vals(){
 	System.out.println(this.val1+" "+this.val2);
+    }
+    public int get_node1(){
+	return this.val1;
+    }
+    public int get_node2(){
+	return this.val2;
     }
 }
 
@@ -49,6 +58,7 @@ public class coarsenGraph {
     /**
      * Finds the edges in the intersection of r graphs 
      * @returns edge list
+     * est. runtime |E|*r
      */
     public static LinkedList<Edge> EdgeList(ArcLabelledImmutableGraph G, int r){
 	LinkedList<Edge> el = new LinkedList<Edge>();
@@ -69,13 +79,13 @@ public class coarsenGraph {
 		    //print(test);
 		    if(test>max_roll) max_roll = test;
 		}	
-		print("Max roll: "+max_roll);
+		print("Max roll: "+max_roll+"\t For edge: "+v +" "+ u + "\t" + label.getLong());
 		if(max_roll < label.getLong()){
 		    print(max_roll);
 		    Edge e = new Edge(v, u);
 		    el.add(e);
 		    count++;
-		    print("Added edge: "+v + "\t" + u + "\t" + label.getLong());
+		    print("Added edge: "+v + " " + u + "\t" + label.getLong());
 		}
 	    }
 	}
