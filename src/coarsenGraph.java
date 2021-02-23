@@ -3,6 +3,8 @@
  * Implementation of corasen graph alg 
  */
 //java classes
+import java.util.Set;
+import java.util.HashSet;
 import java.util.Arrays;
 import java.util.Queue;
 import java.util.LinkedList;
@@ -18,18 +20,23 @@ import it.unimi.dsi.webgraph.labelling.Label;
 class Edge{
     int val1;
     int val2;
-    public Edge(int val1, int val2){
+    int weight;
+    public Edge(int val1, int val2, int weight){
 	this.val1 = val1;
 	this.val2 = val2;
+	this.weight = weight;
     }
-    public void print_vals(){
-	System.out.println(this.val1+" "+this.val2);
+    public void print_edge(){
+	System.out.println(this.val1+" "+this.val2+"\t"+this.weight);
     }
-    public int get_node1(){
+    public int get_val1(){
 	return this.val1;
     }
-    public int get_node2(){
+    public int get_val2(){
 	return this.val2;
+    }
+    public int get_weight(){
+	return this.weight;
     }
 }
 
@@ -57,8 +64,11 @@ public class coarsenGraph {
     }
     /**
      * Finds the edges in the intersection of r graphs 
+     * @params Graph G, int r
      * @returns edge list
      * est. runtime |E|*r
+     * NB: only works for directed edges, this alg breaks for undirected 
+     * b/c each each edge would be visited twice!
      */
     public static LinkedList<Edge> EdgeList(ArcLabelledImmutableGraph G, int r){
 	LinkedList<Edge> el = new LinkedList<Edge>();
@@ -73,16 +83,17 @@ public class coarsenGraph {
 		int u = v_neighbours[i];
 		Label label = v_labels[i];
 		// r rolls, keeps max
-	        double max_roll = Math.random()*(1000.0 - 1); 
+		// -- I am skeptical of Math.random
+	        double max_roll = Math.random()*(1000.0-1); 
 		for (int j = 0; j<r; j++){
-		    double test = Math.random()*(1000.0 - 1);
+		    double test = Math.random()*(1000.0-1);
 		    //print(test);
 		    if(test>max_roll) max_roll = test;
 		}	
 		print("Max roll: "+max_roll+"\t For edge: "+v +" "+ u + "\t" + label.getLong());
 		if(max_roll < label.getLong()){
 		    print(max_roll);
-		    Edge e = new Edge(v, u);
+		    Edge e = new Edge(v, u, (int)label.getLong());
 		    el.add(e);
 		    count++;
 		    print("Added edge: "+v + " " + u + "\t" + label.getLong());
@@ -100,26 +111,42 @@ public class coarsenGraph {
      */
     public static void Alg1(ArcLabelledImmutableGraph G, int r) {
 	// STAGE ONE -- (L: 1-5) Create partition of a r-robust SCC w.r.t. r random graphs.
-	//1. set P_0 = set of vertices
+	//**SKIP, not needed** 1. set P_0 = set of vertices
 	int n = G.numNodes();
-	int [] P = new int[n];
-	//for(int i = 0; i<n; i++){ P[i] = i; }
-	// ---- Does WebGraph have a better way to grab all the nodes?
-	
-	//3. make a random sampled graph from G, callit g_i
 
+	// ---  For 2-5 loop over edges once, make r random rolls	
 	// el is the edge list of the edges that survived the r random rolls
-	LinkedList<Edge> el = EdgeList(G, r); // effectivly line three
-	// $$ For 2-5 loop over edges once, make r random rolls
-	
+	LinkedList<Edge> el = EdgeList(G, r); // this is the intersection of all g_i graphs
+
+	// next 4&5 are combined to "one" set -> find the connected componets of the
+	// intersection of all g_i graphs (stored as an edge list in el)
+	//Compute P_r --- this doesn't work because these are directed edges
+	// so once that is fixed, we will have the connected components
+	HashSet<HashSet<Integer>> P_r = new HashSet<HashSet<Integer>>();
+	// is taking advantage of the fact that the linked list is
+	// sorted by the first node val
+	int prev1 = 0;
+	HashSet<Integer> C_i = new HashSet<Integer>();
 	for(Edge e: el){
-	    e.print_vals();
+	    int u = e.get_val1();
+	    int v = e.get_val2();
+	    if (u == prev1){
+		C_i.add(u);
+		C_i.add(v);
+	    }
+	    else if(C_i.contains(u)){
+		C_i.add(v);
+		prev1 = u;
+	    }
+	    else {
+		P_r.add(C_i);
+		C_i.clear();
+		C_i.add(u);
+		C_i.add(v);
+	    }
+	    e.print_edge();
 	}
-	//4. compute a partition C_i w/ all SCC's in g_i
-	
-	
-	
-	//5. P_i = P_(i-1) (^) C_i
+       
 	
 	//6. Build W, F, pi, and w from G and P_r according to Def 4.1 (p.4)
 	

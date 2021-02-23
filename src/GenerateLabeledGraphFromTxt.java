@@ -16,7 +16,7 @@ import it.unimi.dsi.webgraph.labelling.GammaCodedIntLabel;
 public class GenerateLabeledGraphFromTxt {
 
 	ImmutableGraph G;
-    int n;
+        int n;
 	long m;
 	String basename;
 	String weightfilename;
