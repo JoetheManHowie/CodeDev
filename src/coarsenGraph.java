@@ -20,23 +20,18 @@ import it.unimi.dsi.webgraph.labelling.Label;
 class Edge{
     int val1;
     int val2;
-    int weight;
-    public Edge(int val1, int val2, int weight){
+    public Edge(int val1, int val2){
 	this.val1 = val1;
-	this.val2 = val2;
-	this.weight = weight;
+	this.val2 = val2;	
     }
     public void print_edge(){
-	System.out.println(this.val1+" "+this.val2+"\t"+this.weight);
+	System.out.println(this.val1+" "+this.val2);
     }
     public int get_val1(){
 	return this.val1;
     }
     public int get_val2(){
 	return this.val2;
-    }
-    public int get_weight(){
-	return this.weight;
     }
 }
 
@@ -93,7 +88,7 @@ public class coarsenGraph {
 		print("Max roll: "+max_roll+"\t For edge: "+v +" "+ u + "\t" + label.getLong());
 		if(max_roll < label.getLong()){
 		    print(max_roll);
-		    Edge e = new Edge(v, u, (int)label.getLong());
+		    Edge e = new Edge(v, u);
 		    el.add(e);
 		    count++;
 		    print("Added edge: "+v + " " + u + "\t" + label.getLong());
