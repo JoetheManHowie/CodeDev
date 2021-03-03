@@ -18,13 +18,16 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 
+
+
 //custom classes
 import it.unimi.dsi.webgraph.BVGraph;
 import it.unimi.dsi.webgraph.IncrementalImmutableSequentialGraph;
 import it.unimi.dsi.webgraph.labelling.ArcLabelledImmutableGraph;
 import it.unimi.dsi.webgraph.ImmutableGraph;
 import it.unimi.dsi.webgraph.labelling.Label;
-
+import it.unimi.dsi.webgraph.NodeIterator;
+import it.unimi.dsi.webgraph.LazyIntIterator;
 
 /**
  * Class that takes a probability graph G and finds a coarsened graph G' 
@@ -68,17 +71,21 @@ public class Coarsen {
 	
 	print("Create the final universe lists");
 	createFinalUniverse(basename);
+
 	print("Make the transpose");
-	getTranspose();
+	getTranspose(basename);
+	print("Run over final Universe transpose for the street cred");
+	runOver(finalUniverse_t);
 	print("print the SCCs");
 	//printSCCs();
 	
     }
     /**
      * Builds the connected component graph g_r for 
+     * @params String basename, for reading the graph G (probability graph)
      */
     public void createFinalUniverse(String basename) throws Exception{
-	print("set up graph stuff");
+	//print("set up graph stuff");
 	ExecutorService executor = Executors.newSingleThreadExecutor();
 	final Future<Void> future = executor.submit(new Callable<Void>(){
 		public Void call() throws IOException {
@@ -86,9 +93,9 @@ public class Coarsen {
 		    return null;
 		}
 	    });
-	print("Initialize LinkedList Object");
+	//print("Initialize LinkedList Object");
 	LinkedList <Integer> edges = new LinkedList<Integer>();
-	print("Initialize Random Object");
+	//print("Initialize Random Object");
 	Random rand = new Random();
 	// EACH NODE
 	print("Loop over edges");
@@ -96,25 +103,23 @@ public class Coarsen {
 	    int [] v_neighbours = G.successorArray(v);
 	    Label[] v_labels = G.labelArray(v);
 	    int v_degs = G.outdegree(v);
-	    print("loop over neighbours");
 	    // EACH EDGE
 	    for (int i= 0; i<v_degs; i++){
 		int u = v_neighbours[i];
 		Label label = v_labels[i];
 		int count = 0;
 		int w = (int)label.getLong();
-		print("Edge "+u+", "+v+" weight: "+w);
+		print("Edge "+v+", "+u+" weight: "+w);
 		// EACH UNIVERSE
 		for (int j = 0; j<r; j++){
 		    int test = rand.nextInt(1000);
-		    print("test: "+test);
+		    //print("test: "+test);
 		    if(test <=w)
 			count++;
 		    else
 			break;
 		}
 		if(count==r)
-		    print("edge added");
 		    edges.add(u);
 	    }
 	    int [] arr = new int[edges.size()];
@@ -126,25 +131,71 @@ public class Coarsen {
 	    finalUniverse.add(arr, 0, arr.length);
 	    edges.clear();
 	}
+	// stuff to close
 	finalUniverse.add(IncrementalImmutableSequentialGraph.END_OF_GRAPH);
 	future.get();
 	executor.shutdown();
 	
     }
-
-    public void getTranspose() throws Exception{
-	int nodes = finalUniverse.numNodes();
-	print(nodes);
-	for (int v = 0; v < nodes; v++){
-	    //Iterator<Integer> i = finalUniverse[v].listIterator();
-	    // while (i.hasNext())
-	    //   finalUniverse_t[i.next()].add(v);
-	    int[] v_neighbours = finalUniverse.successorArray(v);
-	    int v_degs = finalUniverse.outdegree(v);
-	    for (int i = 0; i < v_degs; i++){
-		int u = v_neighbours[i];
+    /**
+     * Loops over a graph for the first time
+     * @params IncrementalImmutableSequentialGraph G, (final universe transpose)
+     */
+    public void runOver(IncrementalImmutableSequentialGraph G) throws Exception{
+	NodeIterator iter = G.nodeIterator();
+	while (iter.hasNext()){
+	    int v = iter.nextInt();
+	    LazyIntIterator v_neighbours = iter.successors();
+	    int u = v_neighbours.nextInt();
+	    while(u !=-1){
+		print(v+", "+u);
+		u = v_neighbours.nextInt();
 	    }
 	}
+    }
+    
+    /**
+     * Calculates the transpose graph. NB: this may not be very space efficient
+     * @params String basename, for making the final universe transpose
+     */
+    public void getTranspose(String basename) throws Exception{
+	// temp storage for adj list, while we pull out the transpose adj lists
+	LinkedList<Integer> [] adj_list = new LinkedList[n];
+	for (int a = 0; a< n; a++)
+	    adj_list[a] = new LinkedList<Integer>();
+	// iterate over finalUniverse the first time! so now numNodes can be called and what have you
+	NodeIterator iter = finalUniverse.nodeIterator();
+	while (iter.hasNext()){
+	    int v = iter.nextInt();
+	    LazyIntIterator v_neighbours = iter.successors();
+	    int u = v_neighbours.nextInt();
+	    while(u !=-1){
+		// add v to u's adj list
+		adj_list[u].add(v);
+		print(v+", "+u);
+		u = v_neighbours.nextInt();
+	    }
+	}
+	// stuff for making a graph using WbGraph framework
+	ExecutorService executor = Executors.newSingleThreadExecutor();
+	final Future<Void> future = executor.submit(new Callable<Void>(){
+		public Void call() throws IOException {
+		    BVGraph.store(G, "FUt_"+basename);
+		    return null;
+		}
+	    });
+	// add all the adj list to transpose graph
+	for(LinkedList a: adj_list){
+	    int [] dumdum = new int[a.size()];
+	    // convert linkedlist to arr
+	    for (int i = 0; i<a.size(); i++)
+		dumdum[i] = (int)a.get(i);
+	    finalUniverse_t.add(dumdum, 0, dumdum.length);
+	}
+	// stuff to close 
+	finalUniverse_t.add(IncrementalImmutableSequentialGraph.END_OF_GRAPH);
+	future.get();
+	executor.shutdown();
     }
 
     public static void main(String [] args) throws Exception {

@@ -21,7 +21,9 @@ public class StoreToWebGraph{
 	ExecutorService executor = Executors.newSingleThreadExecutor();
 	final Future<Void> future = executor.submit(new Callable<Void>(){
 		public Void call() throws IOException {
-		    BVGraph.store(g, "twohop"); // twohop is the basename for the file on disk where you store the new graph
+		    BVGraph.store(g, "twohop");
+		    // twohop is the basename for the file on disk
+		    // where you store the new graph
 		    return null;
 		}
 	    });
