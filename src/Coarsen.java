@@ -5,6 +5,7 @@
 //java classes
 //package prob_sum;
 
+import java.lang.Integer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Random;
@@ -76,7 +77,9 @@ public class Coarsen {
 	getTranspose(basename);
 	print("Run over final Universe transpose for the street cred");
 	runOver(finalUniverse_t);
-	print("print the SCCs");
+	print("Now find the SCC's");
+	getSCCs();
+	//print("print the SCCs");
 	//printSCCs();
 	
     }
@@ -160,7 +163,8 @@ public class Coarsen {
      */
     public void getTranspose(String basename) throws Exception{
 	// temp storage for adj list, while we pull out the transpose adj lists
-	LinkedList<Integer> [] adj_list = new LinkedList[n];
+	@SuppressWarnings("unchecked")
+	    LinkedList<Integer> [] adj_list = new LinkedList[n];
 	for (int a = 0; a< n; a++)
 	    adj_list[a] = new LinkedList<Integer>();
 	// iterate over finalUniverse the first time! so now numNodes can be called and what have you
@@ -185,11 +189,11 @@ public class Coarsen {
 		}
 	    });
 	// add all the adj list to transpose graph
-	for(LinkedList a: adj_list){
+	for(LinkedList<Integer> a: adj_list){
 	    int [] dumdum = new int[a.size()];
 	    // convert linkedlist to arr
 	    for (int i = 0; i<a.size(); i++)
-		dumdum[i] = (int)a.get(i);
+		dumdum[i] = a.get(i);
 	    finalUniverse_t.add(dumdum, 0, dumdum.length);
 	}
 	// stuff to close 
@@ -197,7 +201,66 @@ public class Coarsen {
 	future.get();
 	executor.shutdown();
     }
+    /**
+     * do a graph traversal to find the SCCs
+     */
+    public void getSCCs(){
+	int num_cc = 0;
+	Stack<Integer> stack = new Stack<Integer>();
+	// mark nodes as not visited for first run
+	boolean [] visited = new boolean[n];
+	for (int i = 0; i<n; i++)
+	    visited[i] = false;
 
+	// fill nodes in stack
+	for (int i = 0; i< n; i++)
+	    if (visited[i]==false)
+		fillOrder(i, visited, stack);
+
+	// second run, clean visited
+	for (int i = 0; i<n; i++)
+	    visited[i] = false;
+
+	// iterator over nodes aligned in the stack
+	// and mark as nodes are visited
+	while (stack.empty() == false){
+	    int v = (int)stack.pop();
+	    if (visited[v] == false){
+		num_cc++;
+		DFS(v, visited);
+	    }
+	}
+	print("Number of SCC's: "+num_cc);
+    }
+    /**
+     * Traverses the final Universe Graph 
+     * @params int v (the node we are visiting now); bool arr of nodes visited; Stack of nodes to be visited
+     */
+    public void fillOrder(int v, boolean [] visited, Stack<Integer> stack){
+	visited[v] = true;
+	int [] v_neighbours = finalUniverse.successorArray(v);
+	int v_degs = finalUniverse.outdegree(v);
+	for (int i = 0; i<v_degs; i++){
+	    int u = v_neighbours[i];
+	    if(visited[u] == false)
+		fillOrder(u, visited, stack);
+	}
+	stack.push(Integer.valueOf(v));
+    }
+    /**
+     * @params node v, bool arr of visited nodes
+     */
+    public void DFS(int v, boolean [] visited){
+	visited[v] = true;
+	int [] v_neighbours = finalUniverse_t.successorArray(v);
+	int v_degs = finalUniverse_t.outdegree(v);
+	for (int i = 0; i<v_degs; i++){
+	    int u = v_neighbours[i];
+	    if(visited[u] == false)
+		DFS(u, visited);
+	}	
+    }
+    
     public static void main(String [] args) throws Exception {
 	long startTime = System.currentTimeMillis();
 	if(args.length == 0) {
