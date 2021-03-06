@@ -97,12 +97,14 @@ public class Coarsen {
 		}
 	    });
 	//print("Initialize LinkedList Object");
-	LinkedList <Integer> edges = new LinkedList<Integer>();
+	LinkedList <Integer> edges;
 	//print("Initialize Random Object");
 	Random rand = new Random();
 	// EACH NODE
 	print("Loop over edges");
 	for (int v = 0; v<n; v++){
+	    edges = new LinkedList<Integer>();
+	    print("Current node : "+v);
 	    int [] v_neighbours = G.successorArray(v);
 	    Label[] v_labels = G.labelArray(v);
 	    int v_degs = G.outdegree(v);
@@ -116,24 +118,30 @@ public class Coarsen {
 		// EACH UNIVERSE
 		for (int j = 0; j<r; j++){
 		    int test = rand.nextInt(1000);
-		    //print("test: "+test);
+		    print("test: "+test);
 		    if(test <=w)
 			count++;
 		    else
 			break;
 		}
+		
 		if(count==r)
 		    edges.add(u);
 	    }
 	    int [] arr = new int[edges.size()];
 	    int a_count = 0;
+	    print("here");
+	    // it lags out here on node 100 ... idk why right now, still thinking
 	    for(Integer a: edges){
+		print(a);
 		arr[a_count] = a;
 		a_count++;
 	    }
 	    finalUniverse.add(arr, 0, arr.length);
-	    edges.clear();
+	    //edges.clear();
+	    print("Successfully added edge list!");
 	}
+	print("Done!");
 	// stuff to close
 	finalUniverse.add(IncrementalImmutableSequentialGraph.END_OF_GRAPH);
 	future.get();
