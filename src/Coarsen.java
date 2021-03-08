@@ -44,11 +44,9 @@ public class Coarsen {
     int n; // Number of vertices
     ImmutableGraph finalUniverse;
     ImmutableGraph finalUniverse_t;
-    HashMap<Integer, ArrayList<Integer>> SCC;
-    HashMap<Integer, Integer> pi;
-    //private static LinkedList<Integer> finalUniverse[]; //Adjacency List
-    //private static LinkedList<Integer> finalUniverse_t[]; //Adjacency List
-    
+    ImmutableGraph F; // this is F
+    HashMap<Integer, Integer> pi; // this is function pi
+    HashMap<Integer, ArrayList<Integer>> SCC; // W --> set of keys; and w --> .size of each value
     /**
      * System.out.println is way too much to type
      * So I made this.
@@ -57,7 +55,6 @@ public class Coarsen {
     public static <S> void print(S s){
 	System.out.println(s);
     }
-    
     /**
      * Initialized the corasenGraph object
      * @params String of the graph files base name and the number of worlds
@@ -84,12 +81,11 @@ public class Coarsen {
 	// --- Build W, F, pi, and w
 	// --> The keys of SCC is the set W
 	// --> the pi is pi. 
-	// --> the .size of each value in SCC
-
-	// --> F?--------?
+	// --> the .size of each value in SCC is w
 	
-	
-
+	// --> F ?--------?
+	print("Make the set F");
+	makeF(basename);
 	
     }
     /**
@@ -133,22 +129,16 @@ public class Coarsen {
 		    else
 			break;
 		}
-		
 		if(count==r)
 		    edges.add(u);
 	    }
 	    int [] arr = new int[edges.size()];
 	    int a_count = 0;
-	    // print("here");
-	    // it lags out here on node 100 ... idk why right now, still thinking
 	    for(Integer a: edges){
-		//print(a);
 		arr[a_count] = a;
 		a_count++;
 	    }
 	    gg.add(arr, 0, arr.length);
-	    //edges.clear();
-	    //print("Successfully added edge list!");
 	}
 	print("Done!");
 	// stuff to close
@@ -158,23 +148,7 @@ public class Coarsen {
 	finalUniverse = ImmutableGraph.loadMapped("FU_");
 	print("the number of nodes of final is: " + finalUniverse.numNodes() + " Number of edges is: " + finalUniverse.numArcs());
     }
-    /**
-     * Loops over a graph for the first time
-     * @params IncrementalImmutableSequentialGraph G, (final universe transpose)
-     */
-    public void runOver(IncrementalImmutableSequentialGraph G) throws Exception{
-	NodeIterator iter = G.nodeIterator();
-	while (iter.hasNext()){
-	    int v = iter.nextInt();
-	    LazyIntIterator v_neighbours = iter.successors();
-	    int u = v_neighbours.nextInt();
-	    while(u !=-1){
-		print(v+", "+u);
-		u = v_neighbours.nextInt();
-	    }
-	}
-    }
-    
+        
     /**
      * Calculates the transpose graph. NB: this may not be very space efficient
      * @params String basename, for making the final universe transpose
@@ -250,8 +224,9 @@ public class Coarsen {
 	while (stack.empty() == false){
 	    int v = (int)stack.pop();
 	    if (visited[v] == false){
-		num_cc++; // next CC
 		DFS(v, visited, num_cc);
+		num_cc++; // next CC
+
 	    }
 	}
 	print("Number of SCC's: "+num_cc);
@@ -293,7 +268,63 @@ public class Coarsen {
 		DFS(u, visited, num_cc);
 	}	
     }
+    /**
+     * Creates F, which is a set of edges between clusters
+     */
+    public void makeF(String basename) throws Exception{
+	final IncrementalImmutableSequentialGraph gg = new IncrementalImmutableSequentialGraph();
+	ExecutorService executor = Executors.newSingleThreadExecutor();
+	final Future<Void> future = executor.submit(new Callable<Void>(){
+		public Void call() throws IOException {
+		    BVGraph.store(gg, "F_set_"+basename);
+		    return null;
+		}
+	    });
+	int m = SCC.size();
+	for (int cx = 0; cx<m; cx++){
+	    //print("top " +cx);
+	    ArrayList<Integer> nodes = SCC.get(cx);
+	    //print(nodes);
+	    ArrayList<Integer> edges = new ArrayList<Integer>();
+	    for (Integer v: nodes){
+		int [] v_neighbours = finalUniverse.successorArray(v);
+		int v_degs = finalUniverse.outdegree(v);
+		//print(v_degs);
+		for (int i = 0; i < v_degs; i++){
+		    int u = v_neighbours[i];
+      		    int cy = pi.get(u);
+		    print("cy is "+cy);
+		    if (cx != cy)
+			edges.add(cy);
+		}
+		
+	    }
+	    print(edges);
+	    if (edges.size() ==0 )
+		continue;
+
+	    int [] arr = new int[edges.size()];
+	    int a_count = 0;
+	    //print("here");
+	    for(Integer a: edges){
+		print(a);
+		arr[a_count] = a;
+		a_count++;
+	    }
+	    print("add edge list "+cx);
+	    gg.add(arr, 0, arr.length);		
+	}
+	print("Done!");
+	gg.add(IncrementalImmutableSequentialGraph.END_OF_GRAPH);
+	future.get();
+	executor.shutdown();
+	F = ImmutableGraph.loadMapped("F_set_");
+	print("the number of nodes of transpose is: " + F.numNodes() + " Number of edges is: " + F.numArcs());
+    }
     
+    /**
+     * Main Method
+     */
     public static void main(String [] args) throws Exception {
 	long startTime = System.currentTimeMillis();
 	if(args.length == 0) {
