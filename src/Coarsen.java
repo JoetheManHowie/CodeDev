@@ -282,7 +282,7 @@ public class Coarsen {
 	    });
 	int m = SCC.size();
 	for (int cx = 0; cx<m; cx++){
-	    //print("top " +cx);
+	    print("cx is " +cx);
 	    ArrayList<Integer> nodes = SCC.get(cx);
 	    //print(nodes);
 	    ArrayList<Integer> edges = new ArrayList<Integer>();
@@ -293,26 +293,30 @@ public class Coarsen {
 		for (int i = 0; i < v_degs; i++){
 		    int u = v_neighbours[i];
       		    int cy = pi.get(u);
-		    print("cy is "+cy);
+		    // print("cy is "+cy);
 		    if (cx != cy)
 			edges.add(cy);
 		}
 		
 	    }
-	    print(edges);
-	    if (edges.size() ==0 )
-		continue;
-
+	    //print(edges);
 	    int [] arr = new int[edges.size()];
+	    if (edges.size() ==0 )
+	    	continue;
 	    int a_count = 0;
 	    //print("here");
 	    for(Integer a: edges){
-		print(a);
+		//print(a);
 		arr[a_count] = a;
 		a_count++;
 	    }
+	    //print(arr);
 	    print("add edge list "+cx);
-	    gg.add(arr, 0, arr.length);		
+	    Arrays.sort(arr);
+	    for (int i = 0; i < arr.length; i++)
+		print(arr[i]);
+	    gg.add(arr, 0, arr.length);
+	    print("added");
 	}
 	print("Done!");
 	gg.add(IncrementalImmutableSequentialGraph.END_OF_GRAPH);
