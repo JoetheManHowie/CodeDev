@@ -77,7 +77,7 @@ public class Coarsen {
 	//runOver(finalUniverse_t);
 	print("Now find the SCC's");
 	getSCCs();
-
+	print(SCC.get(3017).size());
 	// --- Build W, F, pi, and w
 	// --> The keys of SCC is the set W
 	// --> the pi is pi. 
@@ -301,8 +301,7 @@ public class Coarsen {
 	    }
 	    //print(edges);
 	    int [] arr = new int[edges.size()];
-	    if (edges.size() ==0 )
-	    	continue;
+	    
 	    int a_count = 0;
 	    //print("here");
 	    for(Integer a: edges){
@@ -313,8 +312,8 @@ public class Coarsen {
 	    //print(arr);
 	    print("add edge list "+cx);
 	    Arrays.sort(arr);
-	    for (int i = 0; i < arr.length; i++)
-		print(arr[i]);
+	    //for (int i = 0; i < arr.length; i++)
+	    //	print(arr[i]);
 	    gg.add(arr, 0, arr.length);
 	    print("added");
 	}
