@@ -212,7 +212,7 @@ public class Coarsen {
     
     /**
      * Main Method
-     */
+
     public static void main(String [] args) throws Exception {
 	long startTime = System.currentTimeMillis();
 	if(args.length == 0) {
@@ -223,4 +223,5 @@ public class Coarsen {
 	Coarsen C = new Coarsen(basename);
 	print("Total time elapsed = "+(System.currentTimeMillis()-startTime)/1000.0 +" seconds");
     }
+    */
 }
