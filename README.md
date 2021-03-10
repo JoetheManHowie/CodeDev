@@ -11,7 +11,7 @@ How to use these structures.
 
 Coarsen an ArchLabelledGraph
 
-**java -cp "bin":"lib/\*" Runner <graph's basename>**
+**java -cp "bin":"lib/\*" Runner <graph's basename> <integer>**
 
 
 ##
