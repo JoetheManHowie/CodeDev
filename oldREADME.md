@@ -49,5 +49,7 @@ How to use these structures.
 
 If you want to print a labeled graph do:
 
-**java -cp "bin";"lib/\*" PrintLabeledGraph smallexample**
+**java -cp "bin":"lib/\*" PrintLabeledGraph smallexample**
 
+
+##
