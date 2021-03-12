@@ -10,5 +10,4 @@ bin
 #*
 Coarsen02.java
 StoreToWebGraph*
-PrintLabeledGraph*
-GenerateLabeledGraphFromTxt*
+coarsenGraph*

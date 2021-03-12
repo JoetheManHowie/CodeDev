@@ -1,4 +1,4 @@
- /*
+/*
  * Joe Howie, Feb 10 2021
  * Implementation of corasen graph alg 
  */
@@ -39,7 +39,7 @@ public class FinalGraph {
     ArcLabelledImmutableGraph G; // probabilistic graph G
     int n; // Number of vertices
     ImmutableGraph finalUniverse;
-    ImmutableGraph finalUniverse_t;
+    //ImmutableGraph finalUniverse_t;
     /**
      * System.out.println is way too much to type
      * So I made this.
@@ -55,7 +55,7 @@ public class FinalGraph {
     public FinalGraph(String basename, int num_of_worlds) throws Exception{	
 	r = num_of_worlds;
 	print("Loading Graph...");
-	G = ArcLabelledImmutableGraph.load(basename+".w");
+	G = ArcLabelledImmutableGraph.load("graphs/"+basename+".w");
 	print("Graph Loaded");
 	print("");
 	n = G.numNodes();
@@ -76,7 +76,7 @@ public class FinalGraph {
 	ExecutorService executor = Executors.newSingleThreadExecutor();
 	final Future<Void> future = executor.submit(new Callable<Void>(){
 		public Void call() throws IOException {
-		    BVGraph.store(gg, "FU_"+basename);
+		    BVGraph.store(gg, "graphs/FU_"+basename);
 		    return null;
 		}
 	    });
@@ -84,7 +84,7 @@ public class FinalGraph {
 	Random rand = new Random();
 	// EACH NODE
 	print("Loop over edges");
-	print("The degree of node 100 is: " + G.outdegree(100));
+	//print("The degree of node 100 is: " + G.outdegree(100));
 	for (int v = 0; v<n; v++){
 	    ArrayList<Integer> edges = new ArrayList<Integer>();
 	    //print("Current node : "+v);
@@ -97,7 +97,7 @@ public class FinalGraph {
 		Label label = v_labels[i];
 		int count = 0;
 		int w = (int)label.getLong();
-		// print("Edge "+v+", "+u+" weight: "+w);
+		//print("Edge "+v+", "+u+" weight: "+w);
 		// EACH UNIVERSE
 		for (int j = 0; j<r; j++){
 		    int test = rand.nextInt(1000);
@@ -123,7 +123,7 @@ public class FinalGraph {
 	gg.add(IncrementalImmutableSequentialGraph.END_OF_GRAPH);
 	future.get();
 	executor.shutdown();
-	finalUniverse = ImmutableGraph.loadMapped("FU_");
+	finalUniverse = ImmutableGraph.loadMapped("graphs/FU_"+basename);
 	print("the number of nodes of final is: " + finalUniverse.numNodes() + " Number of edges is: " + finalUniverse.numArcs());
     }
         
@@ -138,24 +138,39 @@ public class FinalGraph {
 	for (int a = 0; a< n; a++)
 	    adj_list[a] = new LinkedList<Integer>();
 	// iterate over finalUniverse the first time! so now numNodes can be called and what have you
+	for (int v = 0; v<n; v++){
+	    int [] v_neighbours = finalUniverse.successorArray(v);
+	    int v_degs = finalUniverse.outdegree(v);
+	    for (int i = 0; i<v_degs; i++){
+		int u = v_neighbours[i];
+		//print(v+", "+u);
+		adj_list[u].add(v);
+
+	    }
+
+	}
+	/*
 	NodeIterator iter = finalUniverse.nodeIterator();
 	while (iter.hasNext()){
 	    int v = iter.nextInt();
 	    LazyIntIterator v_neighbours = iter.successors();
 	    int u = v_neighbours.nextInt();
+	    print(v+", "+u);
 	    while(u !=-1){
+	
 		// add v to u's adj list
 		adj_list[u].add(v);
-		// print(v+", "+u);
+		
 		u = v_neighbours.nextInt();
 	    }
 	}
+	*/
 	// stuff for making a graph using WbGraph framework
 	final IncrementalImmutableSequentialGraph gg = new IncrementalImmutableSequentialGraph();
 	ExecutorService executor = Executors.newSingleThreadExecutor();
 	final Future<Void> future = executor.submit(new Callable<Void>(){
 		public Void call() throws IOException {
-		    BVGraph.store(gg, "FUt_"+basename);
+		    BVGraph.store(gg, "graphs/FUt_"+basename);
 		    return null;
 		}
 	    });
@@ -172,8 +187,6 @@ public class FinalGraph {
 	gg.add(IncrementalImmutableSequentialGraph.END_OF_GRAPH);
 	future.get();
 	executor.shutdown();
-	finalUniverse_t = ImmutableGraph.loadMapped("FUt_");
-	print("the number of nodes of transpose is: " + finalUniverse_t.numNodes() + " Number of edges is: " + finalUniverse_t.numArcs());
     }
     /**
      * Main Method

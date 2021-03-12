@@ -1,0 +1,37 @@
+12:48:18.301 [main] WARN it.unimi.dsi.webgraph.BVGraph - Number of nodes not available: using just one thread
+12:48:18.345 [ProcessingThread-0] INFO it.unimi.dsi.webgraph.BVGraph - Storing...
+Exception in thread "main" java.lang.ArrayIndexOutOfBoundsException: Index -1 out of bounds for length 32
+	at it.unimi.dsi.webgraph.BVGraph.updateBins(BVGraph.java:1683)
+	at it.unimi.dsi.webgraph.BVGraph$CompressionThread.call(BVGraph.java:2006)
+	at it.unimi.dsi.webgraph.BVGraph$CompressionThread.call(BVGraph.java:1688)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264)
+	at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:515)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1128)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:628)
+	at java.base/java.lang.Thread.run(Thread.java:834)
+Exception in thread "main" java.io.FileNotFoundException: graph_1000000_10000000.properties (No such file or directory)
+	at java.base/java.io.FileInputStream.open0(Native Method)
+	at java.base/java.io.FileInputStream.open(FileInputStream.java:219)
+	at java.base/java.io.FileInputStream.<init>(FileInputStream.java:157)
+	at java.base/java.io.FileInputStream.<init>(FileInputStream.java:112)
+	at it.unimi.dsi.webgraph.ImmutableGraph.load(ImmutableGraph.java:635)
+	at it.unimi.dsi.webgraph.ImmutableGraph.load(ImmutableGraph.java:617)
+	at it.unimi.dsi.webgraph.ImmutableGraph.loadMapped(ImmutableGraph.java:555)
+	at GenerateLabeledGraphFromTxt.<init>(GenerateLabeledGraphFromTxt.java:29)
+	at GenerateLabeledGraphFromTxt.main(GenerateLabeledGraphFromTxt.java:86)
+Loading graph...
+Exception in thread "main" java.io.FileNotFoundException: graph_1000000_10000000.w.properties (No such file or directory)
+	at java.base/java.io.FileInputStream.open0(Native Method)
+	at java.base/java.io.FileInputStream.open(FileInputStream.java:219)
+	at java.base/java.io.FileInputStream.<init>(FileInputStream.java:157)
+	at java.base/java.io.FileInputStream.<init>(FileInputStream.java:112)
+	at it.unimi.dsi.webgraph.ImmutableGraph.load(ImmutableGraph.java:635)
+	at it.unimi.dsi.webgraph.ImmutableGraph.load(ImmutableGraph.java:617)
+	at it.unimi.dsi.webgraph.ImmutableGraph.load(ImmutableGraph.java:588)
+	at it.unimi.dsi.webgraph.labelling.ArcLabelledImmutableGraph.load(ArcLabelledImmutableGraph.java:184)
+	at PrintLabeledGraph.print(PrintLabeledGraph.java:8)
+	at PrintLabeledGraph.main(PrintLabeledGraph.java:30)
+text file made
+sorted
+480.63422894477844

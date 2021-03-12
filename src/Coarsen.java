@@ -60,8 +60,8 @@ public class Coarsen {
     public Coarsen(String basename) throws Exception{
 	//r = num_of_worlds;
 	print("Loading Graph...");
-	finalUniverse = ImmutableGraph.loadMapped("FU_"+basename);
-	finalUniverse_t = ImmutableGraph.loadMapped("FUt_"+basename);
+	finalUniverse = ImmutableGraph.loadMapped("graphs/FU_"+basename);
+	finalUniverse_t = ImmutableGraph.loadMapped("graphs/FUt_"+basename);
 	//G = ArcLabelledImmutableGraph.load(basename+".w");
 	print("Graph Loaded");
 	print("");
@@ -73,13 +73,13 @@ public class Coarsen {
 	// --> The keys of SCC is the set W
 	// --> the pi is pi. 
 	// --> the .size of each value in SCC is w
-	
-	// --> F ?--------?
+	// --> F = make a graph of c_i's
 	print("Make the set F");
 	makeF(basename);
-	//serialize();
-	
     }
+    /**
+     * 
+     */
     public void getSCCs(){
 	SCC = new HashMap<Integer, ArrayList<Integer>>();
 	pi =  new HashMap<Integer, Integer>();
@@ -153,16 +153,14 @@ public class Coarsen {
      * Creates F, which is a set of edges between clusters
      */
     public void makeF(String basename) throws Exception{
-
 	final IncrementalImmutableSequentialGraph gg = new IncrementalImmutableSequentialGraph();
 	ExecutorService executor = Executors.newSingleThreadExecutor();
 	final Future<Void> future = executor.submit(new Callable<Void>(){
 		public Void call() throws IOException {
-		    BVGraph.store(gg, "F_set_"+basename);
+		    BVGraph.store(gg, "graphs/F_set_"+basename);
 		    return null;
 		}
 	    });
-
 	int m = SCC.size();
 	for (int cx = 0; cx<m; cx++){
 	    //print("cx is " +cx);
@@ -191,12 +189,11 @@ public class Coarsen {
 		a_count++;
 	    }
 	    //print(arr);
-	    print("add edge list "+cx);
+	    //print("add "+cx+" edge list of size "+arr.length);
 	    Arrays.sort(arr);
 	    
-	    for (int i = 0; i < arr.length; i++)
-		print(arr[i]);
-	    print(arr.length);
+	    //for (int i = 0; i < arr.length; i++)
+	    //	print(arr[i]);
 	    gg.add(arr, 0, arr.length);
 	    //print("added");
 	}
@@ -205,8 +202,8 @@ public class Coarsen {
 	gg.add(IncrementalImmutableSequentialGraph.END_OF_GRAPH);
 	future.get();
 	executor.shutdown();
-	F = ImmutableGraph.loadMapped("F_set_");
-	print("the number of nodes of transpose is: " + F.numNodes() + " Number of edges is: " + F.numArcs());
+	F = ImmutableGraph.loadMapped("graphs/F_set_"+basename);
+	print("the number of coarsened nodes is: " + F.numNodes() + " Number of edges is: " + F.numArcs());
 
     }
     
