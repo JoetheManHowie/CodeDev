@@ -22,11 +22,40 @@ def run_java_macros(basename):
 def make_txt_file():
     nodes = int(sys.argv[1])
     edges = int(sys.argv[2])
-    #added = []
-    added = empty((1,2))
     basename ="graph_"+str(nodes)+"_"+str(edges) 
     f = open(basename+".txt", "w+")
-    for e in range(edges):
+    e_count = 0
+    for u in range(nodes):
+        v = randint(nodes)
+        vstack((added, array([u, v])))
+        weight = randint(1, 1000) # range [1, 1000)
+        string = "%d\t%d\t%d\n"%(u,v,weight)
+        f.write(string)
+        e_count+=1
+        #add_edge(f, u, e_count, nodes, added)
+    while e_count<edges:
+        u = randint(nodes)
+        v = randint(nodes)
+        vstack((added, array([u, v])))
+        weight = randint(1, 1000) # range [1, 1000)
+        string = "%d\t%d\t%d\n"%(u,v,weight)
+        f.write(string)
+        e_count+=1
+        #add_edge(f, u, e_count, nodes, added)
+    f.close()
+    return basename
+
+
+if __name__=="__main__":
+    t1 = time()
+    main()
+    print(time()-t1)
+
+
+
+
+'''     
+        for e in range(edges):
         u = randint(nodes)
         v = randint(nodes)
         ## no self loops or repeat edges
@@ -38,12 +67,4 @@ def make_txt_file():
         #print(u, v)
         weight = randint(1, 1000) # range [1, 1000)
         string = "%d\t%d\t%d\n"%(u,v,weight)
-        f.write(string)
-    f.close()
-    return basename
-        
-
-if __name__=="__main__":
-    t1 = time()
-    main()
-    print(time()-t1)
+'''
