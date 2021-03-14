@@ -22,6 +22,7 @@ def run_java_macros(basename):
 def make_txt_file():
     nodes = int(sys.argv[1])
     edges = int(sys.argv[2])
+    added = empty((1,2))
     basename ="graph_"+str(nodes)+"_"+str(edges) 
     f = open(basename+".txt", "w+")
     e_count = 0

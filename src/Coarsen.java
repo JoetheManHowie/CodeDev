@@ -42,7 +42,8 @@ public class Coarsen {
     int n;
     ImmutableGraph finalUniverse;
     ImmutableGraph finalUniverse_t;
-    ImmutableGraph F; // this is F
+    HashMap<Integer, ArrayList<Integer>> F;
+    //ImmutableGraph F; // this is F
     HashMap<Integer, Integer> pi; // this is function pi
     HashMap<Integer, ArrayList<Integer>> SCC; // W --> set of keys; and w --> .size of each value
     /**
@@ -153,15 +154,19 @@ public class Coarsen {
      * Creates F, which is a set of edges between clusters
      */
     public void makeF(String basename) throws Exception{
-	final IncrementalImmutableSequentialGraph gg = new IncrementalImmutableSequentialGraph();
+	F = new HashMap<Integer, ArrayList<Integer>>();
+	/*
+	IncrementalImmutableSequentialGraph gg = new IncrementalImmutableSequentialGraph();
 	ExecutorService executor = Executors.newSingleThreadExecutor();
-	final Future<Void> future = executor.submit(new Callable<Void>(){
+	Future<Void> future = executor.submit(new Callable<Void>(){
 		public Void call() throws IOException {
 		    BVGraph.store(gg, "graphs/F_set_"+basename);
 		    return null;
 		}
 	    });
+	*/
 	int m = SCC.size();
+	int edge_num = 0;
 	for (int cx = 0; cx<m; cx++){
 	    //print("cx is " +cx);
 	    ArrayList<Integer> nodes = SCC.get(cx);
@@ -179,6 +184,9 @@ public class Coarsen {
 			edges.add(cy);
 		}	
 	    }
+	    F.put(Integer.valueOf(cx), edges);
+	    edge_num += edges.size();
+	    /*
 	    //print(edges);
 	    int [] arr = new int[edges.size()];
 	    int a_count = 0;
@@ -196,15 +204,17 @@ public class Coarsen {
 	    //	print(arr[i]);
 	    gg.add(arr, 0, arr.length);
 	    //print("added");
+	    */
 	}
-	//print("Done!");
-
+	print("Done!");
+	print("the number of coarsened nodes is: " + F.size() + " Number of edges is: " + edge_num);
+	/*
 	gg.add(IncrementalImmutableSequentialGraph.END_OF_GRAPH);
 	future.get();
 	executor.shutdown();
 	F = ImmutableGraph.loadMapped("graphs/F_set_"+basename);
 	print("the number of coarsened nodes is: " + F.numNodes() + " Number of edges is: " + F.numArcs());
-
+	*/
     }
     
     /**
