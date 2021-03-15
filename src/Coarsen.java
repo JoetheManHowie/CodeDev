@@ -1,4 +1,4 @@
- /*
+/*
  * Joe Howie, Feb 10 2021
  * Implementation of corasen graph alg 
  */
@@ -42,6 +42,7 @@ public class Coarsen {
     int n;
     ImmutableGraph finalUniverse;
     ImmutableGraph finalUniverse_t;
+    HashMap<ArrayList<Integer>, Integer> q;
     HashMap<Integer, ArrayList<Integer>> F;
     //ImmutableGraph F; // this is F
     HashMap<Integer, Integer> pi; // this is function pi
@@ -75,8 +76,12 @@ public class Coarsen {
 	// --> the pi is pi. 
 	// --> the .size of each value in SCC is w
 	// --> F = make a graph of c_i's
-	print("Make the set F");
-	makeF(basename);
+	print("Make the set F and q");
+	//makeF(basename);
+	makeF();
+	print("Making q array");
+	refine_q(basename);
+
     }
     /**
      * 
@@ -153,8 +158,9 @@ public class Coarsen {
     /**
      * Creates F, which is a set of edges between clusters
      */
-    public void makeF(String basename) throws Exception{
+    public void makeF() throws Exception{
 	F = new HashMap<Integer, ArrayList<Integer>>();
+	q = new HashMap<ArrayList<Integer>, Integer>();
 	/*
 	IncrementalImmutableSequentialGraph gg = new IncrementalImmutableSequentialGraph();
 	ExecutorService executor = Executors.newSingleThreadExecutor();
@@ -180,8 +186,13 @@ public class Coarsen {
 		    int u = v_neighbours[i];
       		    int cy = pi.get(u);
 		    // print("cy is "+cy);
-		    if (cx != cy)
+		    if (cx != cy){
 			edges.add(cy);
+			ArrayList<Integer> key = new ArrayList<Integer>();
+			key.add(cx);
+			key.add(cy);
+			q.put(key, 1);
+		    }
 		}	
 	    }
 	    F.put(Integer.valueOf(cx), edges);
@@ -208,6 +219,7 @@ public class Coarsen {
 	}
 	print("Done!");
 	print("the number of coarsened nodes is: " + F.size() + " Number of edges is: " + edge_num);
+
 	/*
 	gg.add(IncrementalImmutableSequentialGraph.END_OF_GRAPH);
 	future.get();
@@ -216,7 +228,40 @@ public class Coarsen {
 	print("the number of coarsened nodes is: " + F.numNodes() + " Number of edges is: " + F.numArcs());
 	*/
     }
-    
+    public void refine_q(String basename) throws Exception{
+	ArcLabelledImmutableGraph G = ArcLabelledImmutableGraph.load("graphs/"+basename+".w");
+	int nodes = G.numNodes();
+	for(int v = 0; v<nodes; v++){
+	    int[] v_neighbours = G.successorArray(v);
+	    Label[] v_labels = G.labelArray(v);
+	    int v_degs = G.outdegree(v);
+	    for (int i = 0; i<v_degs; i++){
+		int u = v_neighbours[i];
+		Label label = v_labels[i];
+		int w = (int)label.getLong();
+		int pi_v = pi.get(v);
+		int pi_u = pi.get(u);
+		if(F.get(pi_v).contains(pi_u)){
+		    //print("u: "+v+" v: "+u);
+		    ArrayList<Integer> key = new ArrayList<Integer>();
+		    key.add(pi_v);
+		    key.add(pi_u);
+		    q.put(key, q.get(key) * (1000 - w)); 
+		}
+	    }
+	}
+	//11
+	int a = SCC.size();
+	for(int cx = 0; cx < a; cx++){
+	    ArrayList<Integer> edges = F.get(cx);
+	    for(Integer cy: edges){
+		ArrayList<Integer> key = new ArrayList<Integer>();
+		key.add(cx);
+		key.add(cy);
+		q.put(key, 1-q.get(key));
+	    }
+	}
+    }
     /**
      * Main Method
 
