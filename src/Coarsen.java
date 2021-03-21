@@ -232,16 +232,16 @@ public class Coarsen {
 	ArcLabelledImmutableGraph G = ArcLabelledImmutableGraph.load("graphs/"+basename+".w");
 	int nodes = G.numNodes();
 	for(int v = 0; v<nodes; v++){
-	    int[] v_neighbours = G.successorArray(v);
-	    Label[] v_labels = G.labelArray(v);
-	    int v_degs = G.outdegree(v);
+	    int[] v_neighbours = G.successorArray(v);//finalUniverse.successorArray(v);
+	    Label[] v_labels = G.labelArray(v);//finalUniverse.labelArray(v);
+	    int v_degs = G.outdegree(v);//finalUniverse.outdegree(v);
 	    for (int i = 0; i<v_degs; i++){
 		int u = v_neighbours[i];
 		Label label = v_labels[i];
 		int w = (int)label.getLong();
 		int pi_v = pi.get(v);
 		int pi_u = pi.get(u);
-		if(F.get(pi_v).contains(pi_u)){
+		if(F.get(pi_v).contains(pi_u)){ // slowwwwwwwwww
 		    //print("u: "+v+" v: "+u);
 		    ArrayList<Integer> key = new ArrayList<Integer>();
 		    key.add(pi_v);
@@ -250,6 +250,7 @@ public class Coarsen {
 		}
 	    }
 	}
+	print("line 11");
 	//11
 	int a = SCC.size();
 	for(int cx = 0; cx < a; cx++){
