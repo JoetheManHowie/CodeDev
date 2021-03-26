@@ -16,11 +16,3 @@ Coarsen an ArchLabelledGraph
 
 ##
 
-Make a graph
-----------
-
-There is a simple python executable in graphs/ that creates a random probability graph using the webgraph frame work
-
-**buildGraph <number of nodes> <number of edges>**
-
-Note: n >= m, otherwise the script breaks. Working on fixing this..

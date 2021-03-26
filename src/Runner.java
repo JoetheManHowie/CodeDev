@@ -16,8 +16,7 @@ public class Runner{
 	}
 	String basename = args[0];
 	int number_of_world = Integer.parseInt(args[1]);
-	FinalGraph FG = new FinalGraph(basename, number_of_world);
-	Coarsen C = new Coarsen(basename);
+	Coarsen C = new Coarsen(basename, number_of_world);
 	print("Total time elapsed = "+(System.currentTimeMillis()-startTime)/1000.0 +" seconds");
     }
 

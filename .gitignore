@@ -10,6 +10,6 @@
 bin
 *#
 #*
-Coarsen02.java
+graphs/
 StoreToWebGraph*
-coarsenGraph*
+FinalGraph*

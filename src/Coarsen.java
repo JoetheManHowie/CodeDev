@@ -1,5 +1,5 @@
 /*
- * Joe Howie, Feb 10 2021
+ * Joe Howie, Mar 26 2021
  * Implementation of corasen graph alg 
  */
 //java classes
@@ -39,12 +39,14 @@ import it.unimi.dsi.webgraph.LazyIntIterator;
  *
  */
 public class Coarsen {
+    int r; // number of samples of graph G
+    ArcLabelledImmutableGraph G; // probabilistic graph G
+    int Gn; // Number of vertices
     int n;
     ImmutableGraph finalUniverse;
     ImmutableGraph finalUniverse_t;
     HashMap<ArrayList<Integer>, Integer> q;
-    HashMap<Integer, ArrayList<Integer>> F;
-    //ImmutableGraph F; // this is F
+    HashMap<Integer, HashSet<Integer>> F;
     HashMap<Integer, Integer> pi; // this is function pi
     HashMap<Integer, ArrayList<Integer>> SCC; // W --> set of keys; and w --> .size of each value
     /**
@@ -59,14 +61,24 @@ public class Coarsen {
      * Initialized the corasenGraph object
      * @params String of the graph files base name and the number of worlds
      */
-    public Coarsen(String basename) throws Exception{
-	//r = num_of_worlds;
+    public Coarsen(String basename, int num_of_worlds) throws Exception{
+	r = num_of_worlds;
 	print("Loading Graph...");
-	finalUniverse = ImmutableGraph.loadMapped("graphs/FU_"+basename);
-	finalUniverse_t = ImmutableGraph.loadMapped("graphs/FUt_"+basename);
-	//G = ArcLabelledImmutableGraph.load(basename+".w");
+	G = ArcLabelledImmutableGraph.load("graphs/"+basename+".w");
 	print("Graph Loaded");
-	print("");
+	Gn = G.numNodes();
+	print("The loaded graph has "+Gn+" vertices.");
+	print("Create the final universe lists");
+	createFinalUniverse(basename);
+	finalUniverse = ImmutableGraph.loadMapped("graphs/"+basename+"_FU");
+	print("the number of nodes of final is: " + finalUniverse.numNodes() + " Number of edges is: " + finalUniverse.numArcs());
+	print("Create final universe transpose");
+	getTranspose(basename);	
+	//r = num_of_worlds;
+	finalUniverse_t = ImmutableGraph.loadMapped("graphs/"+basename+"_FUt");
+	//G = ArcLabelledImmutableGraph.load(basename+".w");
+	//print("Graph Loaded");
+	//print("");
 	n = finalUniverse.numNodes();
 	print("Now find the SCC's");
 	getSCCs();
@@ -80,8 +92,98 @@ public class Coarsen {
 	//makeF(basename);
 	makeF();
 	print("Making q array");
-	refine_q(basename);
+	refine_q();
 
+    }
+    public void createFinalUniverse(String basename) throws Exception{
+	final IncrementalImmutableSequentialGraph gg = new IncrementalImmutableSequentialGraph();
+	ExecutorService executor = Executors.newSingleThreadExecutor();
+	final Future<Void> future = executor.submit(new Callable<Void>(){
+		public Void call() throws IOException {
+		    BVGraph.store(gg, "graphs/"+basename+"_FU");
+		    return null;
+		}
+	    });
+	
+	Random rand = new Random();
+	// EACH NODE
+	for (int v = 0; v<Gn; v++){
+	    ArrayList<Integer> edges = new ArrayList<Integer>();
+	    int [] v_neighbours = G.successorArray(v);
+	    Label[] v_labels = G.labelArray(v);
+	    int v_degs = G.outdegree(v);
+	    // EACH EDGE
+	    for (int i= 0; i<v_degs; i++){
+		int u = v_neighbours[i];
+		Label label = v_labels[i];
+		int count = 0;
+		int w = (int)label.getLong();
+		// EACH UNIVERSE
+		for (int j = 0; j<r; j++){
+		    int test = rand.nextInt(1000);
+		    if(test <=w)
+			count++;
+		    else
+			break;
+		}
+		if(count==r)
+		    edges.add(u);
+	    }
+	    int [] arr = new int[edges.size()];
+	    int a_count = 0;
+	    for(Integer a: edges){
+		arr[a_count] = a;
+		a_count++;
+	    }
+	    gg.add(arr, 0, arr.length);
+	}
+	print("Done!");
+	// stuff to close
+	gg.add(IncrementalImmutableSequentialGraph.END_OF_GRAPH);
+	future.get();
+	executor.shutdown();
+	//finalUniverse = ImmutableGraph.loadMapped("graphs/FU_"+basename);
+    }
+    /**
+     * Calculates the transpose graph. NB: this may not be very space efficient
+     * @params String basename, for making the final universe transpose
+     */
+    public void getTranspose(String basename) throws Exception{
+	// temp storage for adj list, while we pull out the transpose adj lists
+	@SuppressWarnings("unchecked")
+	    LinkedList<Integer> [] adj_list = new LinkedList[Gn];
+	for (int a = 0; a< Gn; a++)
+	    adj_list[a] = new LinkedList<Integer>();
+	// iterate over finalUniverse the first time! so now numNodes can be called and what have you
+	for (int v = 0; v<Gn; v++){
+	    int [] v_neighbours = finalUniverse.successorArray(v);
+	    int v_degs = finalUniverse.outdegree(v);
+	    for (int i = 0; i<v_degs; i++){
+		int u = v_neighbours[i];
+		adj_list[u].add(v);
+	    }
+	}
+	final IncrementalImmutableSequentialGraph gg = new IncrementalImmutableSequentialGraph();
+	ExecutorService executor = Executors.newSingleThreadExecutor();
+	final Future<Void> future = executor.submit(new Callable<Void>(){
+		public Void call() throws IOException {
+		    BVGraph.store(gg, "graphs/"+basename+"_FUt");
+		    return null;
+		}
+	    });
+	// add all the adj list to transpose graph
+	for(LinkedList<Integer> a: adj_list){
+	    int [] dumdum = new int[a.size()];
+	    // convert linkedlist to arr
+	    for (int i = 0; i<a.size(); i++)
+		dumdum[i] = a.get(i);
+	    Arrays.sort(dumdum);
+	    gg.add(dumdum, 0, dumdum.length);
+	}
+	// stuff to close 
+	gg.add(IncrementalImmutableSequentialGraph.END_OF_GRAPH);
+	future.get();
+	executor.shutdown();
     }
     /**
      * 
@@ -95,16 +197,13 @@ public class Coarsen {
 	boolean [] visited = new boolean[n];
 	for (int i = 0; i<n; i++)
 	    visited[i] = false;
-
 	// fill nodes in stack
 	for (int i = 0; i< n; i++)
 	    if (visited[i]==false)
 		fillOrder(i, visited, stack);
-
 	// second run, clean visited
 	for (int i = 0; i<n; i++)
 	    visited[i] = false;
-
 	// iterator over nodes aligned in the stack
 	// and mark as nodes are visited
 	while (stack.empty() == false){
@@ -112,7 +211,6 @@ public class Coarsen {
 	    if (visited[v] == false){
 		DFS(v, visited, num_cc);
 		num_cc++; // next CC
-
 	    }
 	}
 	print("Number of SCC's: "+num_cc);
@@ -142,9 +240,7 @@ public class Coarsen {
 	ArrayList<Integer> curr_list = SCC.get(Integer.valueOf(num_cc));
 	if (curr_list == null)
 	    curr_list = new ArrayList<Integer>();
-	// print(SCC.get(Integer.valueOf(num_cc)));
 	curr_list.add(v);
-	// print(num_cc);
 	SCC.put(Integer.valueOf(num_cc), curr_list);
 	int [] v_neighbours = finalUniverse_t.successorArray(v);
 	int v_degs = finalUniverse_t.outdegree(v);
@@ -154,38 +250,23 @@ public class Coarsen {
 		DFS(u, visited, num_cc);
 	}	
     }
-            
     /**
      * Creates F, which is a set of edges between clusters
      */
     public void makeF() throws Exception{
-	F = new HashMap<Integer, ArrayList<Integer>>();
+	F = new HashMap<Integer, HashSet<Integer>>();
 	q = new HashMap<ArrayList<Integer>, Integer>();
-	/*
-	IncrementalImmutableSequentialGraph gg = new IncrementalImmutableSequentialGraph();
-	ExecutorService executor = Executors.newSingleThreadExecutor();
-	Future<Void> future = executor.submit(new Callable<Void>(){
-		public Void call() throws IOException {
-		    BVGraph.store(gg, "graphs/F_set_"+basename);
-		    return null;
-		}
-	    });
-	*/
 	int m = SCC.size();
 	int edge_num = 0;
 	for (int cx = 0; cx<m; cx++){
-	    //print("cx is " +cx);
 	    ArrayList<Integer> nodes = SCC.get(cx);
-	    //print(nodes);
-	    ArrayList<Integer> edges = new ArrayList<Integer>();
+	    HashSet<Integer> edges = new HashSet<Integer>();
 	    for (Integer v: nodes){
 		int [] v_neighbours = finalUniverse.successorArray(v);
 		int v_degs = finalUniverse.outdegree(v);
-		//print(v_degs);
 		for (int i = 0; i < v_degs; i++){
 		    int u = v_neighbours[i];
       		    int cy = pi.get(u);
-		    // print("cy is "+cy);
 		    if (cx != cy){
 			edges.add(cy);
 			ArrayList<Integer> key = new ArrayList<Integer>();
@@ -197,52 +278,25 @@ public class Coarsen {
 	    }
 	    F.put(Integer.valueOf(cx), edges);
 	    edge_num += edges.size();
-	    /*
-	    //print(edges);
-	    int [] arr = new int[edges.size()];
-	    int a_count = 0;
-	    //print("here");
-	    for(Integer a: edges){
-		//print(a);
-		arr[a_count] = a;
-		a_count++;
-	    }
-	    //print(arr);
-	    //print("add "+cx+" edge list of size "+arr.length);
-	    Arrays.sort(arr);
-	    
-	    //for (int i = 0; i < arr.length; i++)
-	    //	print(arr[i]);
-	    gg.add(arr, 0, arr.length);
-	    //print("added");
-	    */
 	}
 	print("Done!");
 	print("the number of coarsened nodes is: " + F.size() + " Number of edges is: " + edge_num);
-
-	/*
-	gg.add(IncrementalImmutableSequentialGraph.END_OF_GRAPH);
-	future.get();
-	executor.shutdown();
-	F = ImmutableGraph.loadMapped("graphs/F_set_"+basename);
-	print("the number of coarsened nodes is: " + F.numNodes() + " Number of edges is: " + F.numArcs());
-	*/
     }
-    public void refine_q(String basename) throws Exception{
-	ArcLabelledImmutableGraph G = ArcLabelledImmutableGraph.load("graphs/"+basename+".w");
-	int nodes = G.numNodes();
-	for(int v = 0; v<nodes; v++){
-	    int[] v_neighbours = G.successorArray(v);//finalUniverse.successorArray(v);
-	    Label[] v_labels = G.labelArray(v);//finalUniverse.labelArray(v);
-	    int v_degs = G.outdegree(v);//finalUniverse.outdegree(v);
+    /**
+     * @params string basename
+     */
+    public void refine_q() throws Exception{
+	for(int v = 0; v<Gn; v++){
+	    int[] v_neighbours = G.successorArray(v);
+	    Label[] v_labels = G.labelArray(v);
+	    int v_degs = G.outdegree(v);
 	    for (int i = 0; i<v_degs; i++){
 		int u = v_neighbours[i];
 		Label label = v_labels[i];
 		int w = (int)label.getLong();
 		int pi_v = pi.get(v);
 		int pi_u = pi.get(u);
-		if(F.get(pi_v).contains(pi_u)){ // slowwwwwwwwww
-		    //print("u: "+v+" v: "+u);
+		if(F.get(pi_v).contains(pi_u)){ 
 		    ArrayList<Integer> key = new ArrayList<Integer>();
 		    key.add(pi_v);
 		    key.add(pi_u);
@@ -250,11 +304,10 @@ public class Coarsen {
 		}
 	    }
 	}
-	print("line 11");
 	//11
 	int a = SCC.size();
 	for(int cx = 0; cx < a; cx++){
-	    ArrayList<Integer> edges = F.get(cx);
+	    HashSet<Integer> edges = F.get(cx);
 	    for(Integer cy: edges){
 		ArrayList<Integer> key = new ArrayList<Integer>();
 		key.add(cx);
@@ -263,18 +316,4 @@ public class Coarsen {
 	    }
 	}
     }
-    /**
-     * Main Method
-
-    public static void main(String [] args) throws Exception {
-	long startTime = System.currentTimeMillis();
-	if(args.length == 0) {
-	    print("the if happened");
-	    args = new String[]{"fang"};
-	}
-	String basename = args[0];
-	Coarsen C = new Coarsen(basename);
-	print("Total time elapsed = "+(System.currentTimeMillis()-startTime)/1000.0 +" seconds");
-    }
-    */
 }
