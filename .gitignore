@@ -4,6 +4,7 @@
 *.sh
 *#
 #*
+bin/
 graphs/
 webgraph/
 StoreToWebGraph*
