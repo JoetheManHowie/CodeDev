@@ -1,15 +1,10 @@
 *.out
 *.log
-*.offsets
-*.properties
-*.txt
-*.graph
-*.labeloffsets
 *~
-*.labels
-bin
+*.sh
 *#
 #*
 graphs/
+webgraph/
 StoreToWebGraph*
 FinalGraph*

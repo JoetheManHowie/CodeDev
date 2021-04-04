@@ -2,8 +2,8 @@
  * Joe Howie, Mar 26 2021
  * Implementation of corasen graph alg 
  */
-//java classes
 
+//java classes
 import java.lang.Integer;
 import java.util.HashSet;
 import java.util.HashMap;
@@ -41,14 +41,14 @@ import it.unimi.dsi.webgraph.LazyIntIterator;
 public class Coarsen {
     int r; // number of samples of graph G
     ArcLabelledImmutableGraph G; // probabilistic graph G
-    int Gn; // Number of vertices
-    int n;
-    ImmutableGraph finalUniverse;
-    ImmutableGraph finalUniverse_t;
-    HashMap<ArrayList<Integer>, Integer> q;
-    HashMap<Integer, HashSet<Integer>> F;
-    HashMap<Integer, Integer> pi; // this is function pi
-    HashMap<Integer, ArrayList<Integer>> SCC; // W --> set of keys; and w --> .size of each value
+    int Gn; // Number of vertices in base graph
+    int n; // Number of nodes in the finalUniverse graph
+    ImmutableGraph finalUniverse; // after r coin tosses (weighted) on each edge
+    ImmutableGraph finalUniverse_t; // transpose graph
+    HashMap<ArrayList<Integer>, Integer> q; // defined in 4.1
+    HashMap<Integer, HashSet<Integer>> F; // defined in 4.1
+    HashMap<Integer, Integer> pi; // defined in 4.1
+    HashMap<Integer, ArrayList<Integer>> SCC; // W --> set of keys; and w --> .size of each value; defined in 4.1
     /**
      * System.out.println is way too much to type
      * So I made this.
@@ -63,38 +63,35 @@ public class Coarsen {
      */
     public Coarsen(String basename, int num_of_worlds) throws Exception{
 	r = num_of_worlds;
-	print("Loading Graph...");
 	G = ArcLabelledImmutableGraph.load("graphs/"+basename+".w");
-	print("Graph Loaded");
+	print(basename+" graph loaded");
 	Gn = G.numNodes();
-	print("The loaded graph has "+Gn+" vertices.");
-	print("Create the final universe lists");
+	print("The "+basename+" graph has "+Gn+" vertices.");
+	print("Create the final universe graph");
 	createFinalUniverse(basename);
 	finalUniverse = ImmutableGraph.loadMapped("graphs/"+basename+"_FU");
-	print("the number of nodes of final is: " + finalUniverse.numNodes() + " Number of edges is: " + finalUniverse.numArcs());
-	print("Create final universe transpose");
-	getTranspose(basename);	
-	//r = num_of_worlds;
-	finalUniverse_t = ImmutableGraph.loadMapped("graphs/"+basename+"_FUt");
-	//G = ArcLabelledImmutableGraph.load(basename+".w");
-	//print("Graph Loaded");
-	//print("");
 	n = finalUniverse.numNodes();
-	print("Now find the SCC's");
-	getSCCs();
-	//print(SCC.get(193));
+	print("The number of nodes of final is: " + n + " Number of edges is: " + finalUniverse.numArcs());
+	print("Create final universe transpose graph");
+	getTranspose(basename);	
+	finalUniverse_t = ImmutableGraph.loadMapped("graphs/"+basename+"_FUt");
+
+	print("Now find the SCC\'s");
+	getSCCs(); // prints the number of SCC's
 	// --- Build W, F, pi, and w
 	// --> The keys of SCC is the set W
 	// --> the pi is pi. 
 	// --> the .size of each value in SCC is w
 	// --> F = make a graph of c_i's
-	print("Make the set F and q");
-	//makeF(basename);
-	makeF();
+	print("Make the sets in F");
+	makeF(); // prints the size of F and the number of edges
 	print("Making q array");
 	refine_q();
-
+	print("Finished");
     }
+    /**
+     * @params Takes in basename to create the final universe graph
+     */
     public void createFinalUniverse(String basename) throws Exception{
 	final IncrementalImmutableSequentialGraph gg = new IncrementalImmutableSequentialGraph();
 	ExecutorService executor = Executors.newSingleThreadExecutor();
@@ -137,12 +134,10 @@ public class Coarsen {
 	    }
 	    gg.add(arr, 0, arr.length);
 	}
-	print("Done!");
 	// stuff to close
 	gg.add(IncrementalImmutableSequentialGraph.END_OF_GRAPH);
 	future.get();
 	executor.shutdown();
-	//finalUniverse = ImmutableGraph.loadMapped("graphs/FU_"+basename);
     }
     /**
      * Calculates the transpose graph. NB: this may not be very space efficient
@@ -279,8 +274,7 @@ public class Coarsen {
 	    F.put(Integer.valueOf(cx), edges);
 	    edge_num += edges.size();
 	}
-	print("Done!");
-	print("the number of coarsened nodes is: " + F.size() + " Number of edges is: " + edge_num);
+	print("The number of coarsened nodes is: " + F.size() + " Number of edges is: " + edge_num);
     }
     /**
      * @params string basename

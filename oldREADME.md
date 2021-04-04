@@ -38,7 +38,7 @@ You will see three files: *smallexample.graph, smallexample.offsets, smallexampl
 
 Now we want to add the labels (probabilities) of the edges. 
 
-**java -cp "bin";"lib/\*" GenerateLabeledGraphFromTxt smallexample smallexample.txt**
+**java -cp "bin":"lib/\*" GenerateLabeledGraphFromTxt smallexample smallexample.txt**
 
 You will see some .w files in addition. 
 
