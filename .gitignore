@@ -4,6 +4,7 @@
 *.sh
 *#
 #*
+py_scripts/
 bin/
 graphs/
 webgraph/

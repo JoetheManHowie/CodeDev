@@ -13,11 +13,11 @@ In webgraph/ run
 
 In CodeDev/ run
 
-**nohup java -cp "bin":"lib/*" graphToEdgelist baseame&**
+**nohup java -cp "bin":"lib/*" GraphToEdgelist baseame number&**
 
-In graphs/ tun
+In graphs/ run
 
-**nohup sort -k1n -k2n basename.txt | uniq > basename_sorted.txt&**
+**nohup sort -k1n -k2n basename.edgelist | uniq > basename_sorted.edgelist&**
 
 **nohup java -cp "../lib/\*" it.unimi.dsi.webgraph.BVGraph -1 -g ArcListASCIIGraph dummy basename < basename_sorted.txt&**
 
