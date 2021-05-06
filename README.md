@@ -7,13 +7,17 @@ How to make webgraphs:
 ----------------------
 In webgraph/ run
 
-**wget <the four files for the webgraph you want (graph and properties, again for the transpose)>**
+**wget <the four files for the webgraph you want (.graph and .properties, again for the transpose)>**
 
-**nohup java -cp "../lib/*" it.unimi.dsi.webgraph.BVGraph -o -O -L basename&**
+`nohup java -cp "../lib/*" it.unimi.dsi.webgraph.BVGraph -o -O -L basename&`
+
+This creates the .obl file for the graph
 
 In CodeDev/ run
 
 **nohup java -cp "bin":"lib/*" GraphToEdgelist baseame number&**
+
+Creates the file in graphs/ 
 
 In graphs/ run
 

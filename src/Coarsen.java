@@ -63,6 +63,7 @@ public class Coarsen {
      */
     public Coarsen(String basename, int num_of_worlds) throws Exception{
 	r = num_of_worlds;
+	print("Number of sampled graphs: "+r);
 	G = ArcLabelledImmutableGraph.load("graphs/"+basename+".w");
 	print(basename+" graph loaded");
 	Gn = G.numNodes();
