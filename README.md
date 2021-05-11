@@ -38,6 +38,6 @@ How to use these structures.
 
 Coarsen an ArchLabelledGraph
 
-`nohup java -Xss4g -Xmx64g -cp "bin":"lib/\*" Runner basename integer> basename.out 2>&1&`
+`nohup java -Xss4g -Xmx64g -cp "bin":"lib/\*" Runner basename integer > basename.out 2>&1&`
 
 ##

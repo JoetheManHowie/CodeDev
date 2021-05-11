@@ -1,9 +1,3 @@
-/*
- * Joe Howie, Mar 26 2021
- * Implementation of corasen graph alg 
- */
-
-//java classes
 import java.lang.Integer;
 import java.util.HashSet;
 import java.util.HashMap;
@@ -38,16 +32,13 @@ import it.unimi.dsi.webgraph.LazyIntIterator;
  * For Scalable Diffusion analysis"
  *
  */
-public class Coarsen {
+public class oldCoarsen {
     int r; // number of samples of graph G
     ArcLabelledImmutableGraph G; // probabilistic graph G
     int Gn; // Number of vertices in base graph
     int n; // Number of nodes in the finalUniverse graph
-    ImmutableGraph finalUniverse; // after r instances
+    ImmutableGraph finalUniverse; // after r coin tosses (weighted) on each edge
     ImmutableGraph finalUniverse_t; // transpose graph
-    ImmutableGraph Ci; // after r instances
-    ImmutableGraph Ci_t; // transpose graph
-    HashMap<Integer, ArrayList<Integer>> Ci_SCC;
     HashMap<ArrayList<Integer>, Integer> q; // defined in 4.1
     HashMap<Integer, HashSet<Integer>> F; // defined in 4.1
     HashMap<Integer, Integer> pi; // defined in 4.1
@@ -64,37 +55,31 @@ public class Coarsen {
      * Initialized the corasenGraph object
      * @params String of the graph files base name and the number of worlds
      */
-    public Coarsen(String basename, int num_of_worlds) throws Exception{
+    public oldCoarsen(String basename, int num_of_worlds) throws Exception{
 	r = num_of_worlds;
 	print("Number of sampled graphs: "+r);
-
 	G = ArcLabelledImmutableGraph.load("graphs/"+basename+".w");
 	print(basename+" graph loaded");
-
 	Gn = G.numNodes();
 	print("The "+basename+" graph has "+Gn+" vertices.");
-
 	print("Create the final universe graph");
 	createFinalUniverse(basename);
 	finalUniverse = ImmutableGraph.loadMapped("graphs/"+basename+"_FU");
 	n = finalUniverse.numNodes();
 	print("The number of nodes of final is: " + n + " Number of edges is: " + finalUniverse.numArcs());
-
 	print("Create final universe transpose graph");
-	getTranspose(finalUniverse, basename, "_FU");	
+	getTranspose(basename);	
 	finalUniverse_t = ImmutableGraph.loadMapped("graphs/"+basename+"_FUt");
 
 	print("Now find the SCC\'s");
-	getSCCs(finalUniverse, finalUniverse_t, SCC); // prints the number of SCC's
+	getSCCs(); // prints the number of SCC's
 	// --- Build W, F, pi, and w
 	// --> The keys of SCC is the set W
 	// --> the pi is pi. 
 	// --> the .size of each value in SCC is w
 	// --> F = make a graph of c_i's
-
 	print("Make the sets in F");
 	makeF(); // prints the size of F and the number of edges
-
 	print("Making q array");
 	refine_q();
 	print("Finished");
@@ -103,71 +88,57 @@ public class Coarsen {
      * @params Takes in basename to create the final universe graph
      */
     public void createFinalUniverse(String basename) throws Exception{
+	final IncrementalImmutableSequentialGraph gg = new IncrementalImmutableSequentialGraph();
+	ExecutorService executor = Executors.newSingleThreadExecutor();
+	final Future<Void> future = executor.submit(new Callable<Void>(){
+		public Void call() throws IOException {
+		    BVGraph.store(gg, "graphs/"+basename+"_FU");
+		    return null;
+		}
+	    });
+	
 	Random rand = new Random();
 	// EACH NODE
-	for (int q = 0; q<r; q++){
-	    final IncrementalImmutableSequentialGraph gg = new IncrementalImmutableSequentialGraph();
-	    ExecutorService executor = Executors.newSingleThreadExecutor();
-	    final Future<Void> future = executor.submit(new Callable<Void>(){
-		    public Void call() throws IOException {
-			BVGraph.store(gg, "graphs/"+basename+"_FU");
-			return null;
-		    }
-		});
-	    	        
-	    for (int v = 0; v<Gn; v++){
-		ArrayList<Integer> edges = new ArrayList<Integer>();
-		int [] v_neighbours = G.successorArray(v);
-		Label[] v_labels = G.labelArray(v);
-		int v_degs = G.outdegree(v);
-		// EACH EDGE
-		for (int i= 0; i<v_degs; i++){
-		    int u = v_neighbours[i];
-		    Label label = v_labels[i];
-		    int count = 0;
-		    int w = (int)label.getLong();
-		    if (rand.nextInt(1000) <= w){
-			edges.add(u);
-		    }
+	for (int v = 0; v<Gn; v++){
+	    ArrayList<Integer> edges = new ArrayList<Integer>();
+	    int [] v_neighbours = G.successorArray(v);
+	    Label[] v_labels = G.labelArray(v);
+	    int v_degs = G.outdegree(v);
+	    // EACH EDGE
+	    for (int i= 0; i<v_degs; i++){
+		int u = v_neighbours[i];
+		Label label = v_labels[i];
+		int count = 0;
+		int w = (int)label.getLong();
+		// EACH UNIVERSE
+		for (int j = 0; j<r; j++){
+		    int test = rand.nextInt(1000);
+		    if(test <=w)
+			count++;
+		    else
+			break;
 		}
-		int [] arr = new int[edges.size()];
-		int a_count = 0;
-		for(Integer a: edges){
-		    arr[a_count] = a;
-		    a_count++;
-		}
-		gg.add(arr, 0, arr.length);
+		if(count==r)
+		    edges.add(u);
 	    }
-
-	    // stuff to close
-	    gg.add(IncrementalImmutableSequentialGraph.END_OF_GRAPH);
-	    future.get();
-	    executor.shutdown();
-	    
-	    if (q == 0){
-		finalUniverse = ImmutableGraph.loadMapped("graphs/"+basename+"_FU");
-		n = finalUniverse.numNodes();
-		getTranspose(finalUniverse, basename, "_FU");
-		finalUniverse_t = ImmutableGraph.loadMapped("graphs/"+basename+"_FUt");
-		getSCCs(finalUniverse, finalUniverse_t, SCC);
-
+	    int [] arr = new int[edges.size()];
+	    int a_count = 0;
+	    for(Integer a: edges){
+		arr[a_count] = a;
+		a_count++;
 	    }
-	    else{
-		Ci = ImmutableGraph.loadMapped("graphs/"+basename+"_temp");
-		getTranspose(Ci, basename, "_tempt");
-		Ci_t = ImmutableGraph.loadMapped("graphs/"+basename+"_tempt");
-		Ci_SCC = new HashMap<Integer, ArrayList<Integer>>(); 
-		getSCCs(finalUniverse, finalUniverse_t, SCC);
-		MEET(SCC, Ci_SCC); // updates SCC
-		updateFU();
-	    }
+	    gg.add(arr, 0, arr.length);
 	}
+	// stuff to close
+	gg.add(IncrementalImmutableSequentialGraph.END_OF_GRAPH);
+	future.get();
+	executor.shutdown();
     }
     /**
      * Calculates the transpose graph. NB: this may not be very space efficient
      * @params String basename, for making the final universe transpose
      */
-    public void getTranspose(ImmutableGraph graph, String basename, String ext) throws Exception{
+    public void getTranspose(String basename) throws Exception{
 	// temp storage for adj list, while we pull out the transpose adj lists
 	@SuppressWarnings("unchecked")
 	    LinkedList<Integer> [] adj_list = new LinkedList[Gn];
@@ -175,8 +146,8 @@ public class Coarsen {
 	    adj_list[a] = new LinkedList<Integer>();
 	// iterate over finalUniverse the first time! so now numNodes can be called and what have you
 	for (int v = 0; v<Gn; v++){
-	    int [] v_neighbours = graph.successorArray(v);
-	    int v_degs = graph.outdegree(v);
+	    int [] v_neighbours = finalUniverse.successorArray(v);
+	    int v_degs = finalUniverse.outdegree(v);
 	    for (int i = 0; i<v_degs; i++){
 		int u = v_neighbours[i];
 		adj_list[u].add(v);
@@ -186,7 +157,7 @@ public class Coarsen {
 	ExecutorService executor = Executors.newSingleThreadExecutor();
 	final Future<Void> future = executor.submit(new Callable<Void>(){
 		public Void call() throws IOException {
-		    BVGraph.store(gg, "graphs/"+basename+ext);
+		    BVGraph.store(gg, "graphs/"+basename+"_FUt");
 		    return null;
 		}
 	    });
@@ -207,7 +178,8 @@ public class Coarsen {
     /**
      * 
      */
-    public void getSCCs(ImmutableGraph graph, ImmutableGraph graph_t, HashMap<Integer, ArrayList<Integer>> SCC){
+    public void getSCCs(){
+	SCC = new HashMap<Integer, ArrayList<Integer>>();
 	pi =  new HashMap<Integer, Integer>();
 	int num_cc = 0;
 	Stack<Integer> stack = new Stack<Integer>();
@@ -218,7 +190,7 @@ public class Coarsen {
 	// fill nodes in stack
 	for (int i = 0; i< n; i++)
 	    if (visited[i]==false)
-		fillOrder(i, visited, stack, graph);
+		fillOrder(i, visited, stack);
 	// second run, clean visited
 	for (int i = 0; i<n; i++)
 	    visited[i] = false;
@@ -227,7 +199,7 @@ public class Coarsen {
 	while (stack.empty() == false){
 	    int v = (int)stack.pop();
 	    if (visited[v] == false){
-		DFS(v, visited, num_cc, graph_t);
+		DFS(v, visited, num_cc);
 		num_cc++; // next CC
 	    }
 	}
@@ -237,21 +209,21 @@ public class Coarsen {
      * Traverses the final Universe Graph 
      * @params int v (the node we are visiting now); bool arr of nodes visited; Stack of nodes to be visited
      */
-    public void fillOrder(int v, boolean [] visited, Stack<Integer> stack, ImmutableGraph graph){
+    public void fillOrder(int v, boolean [] visited, Stack<Integer> stack){
 	visited[v] = true;
-	int [] v_neighbours = graph.successorArray(v);
-	int v_degs = graph.outdegree(v);
+	int [] v_neighbours = finalUniverse.successorArray(v);
+	int v_degs = finalUniverse.outdegree(v);
 	for (int i = 0; i<v_degs; i++){
 	    int u = v_neighbours[i];
 	    if(visited[u] == false)
-		fillOrder(u, visited, stack, graph);
+		fillOrder(u, visited, stack);
 	}
 	stack.push(Integer.valueOf(v));
     }
     /**
      * @params node v, bool arr of visited nodes
      */
-    public void DFS(int v, boolean [] visited, int num_cc, ImmutableGraph graph_t){
+    public void DFS(int v, boolean [] visited, int num_cc){
 	visited[v] = true;
 	// add node to this cc
 	pi.put(Integer.valueOf(v), Integer.valueOf(num_cc));
@@ -260,24 +232,14 @@ public class Coarsen {
 	    curr_list = new ArrayList<Integer>();
 	curr_list.add(v);
 	SCC.put(Integer.valueOf(num_cc), curr_list);
-	int [] v_neighbours = graph_t.successorArray(v);
-	int v_degs = graph_t.outdegree(v);
+	int [] v_neighbours = finalUniverse_t.successorArray(v);
+	int v_degs = finalUniverse_t.outdegree(v);
 	for (int i = 0; i<v_degs; i++){
 	    int u = v_neighbours[i];
 	    if(visited[u] == false)
-		DFS(u, visited, num_cc, graph_t);
+		DFS(u, visited, num_cc);
 	}	
     }
-
-    public void MEET(HashMap<Integer, ArrayList<Integer>> SCC, HashMap<Integer, ArrayList<Integer>> Ci_SCC ){
-	HashMap<Integer, ArrayList<Integer>> temp = new HashMap<Integer, ArrayList<Integer>>();
-	
-    }
-    
-    public void updateFU(){
-	
-    }
-
     /**
      * Creates F, which is a set of edges between clusters
      */
@@ -344,3 +306,4 @@ public class Coarsen {
 	}
     }
 }
+
