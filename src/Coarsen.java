@@ -1,29 +1,6 @@
-/*
- * Joe Howie, Mar 26 2021
- * Implementation of corasen graph alg 
- */
-
-//java classes
-import java.lang.Integer;
-import java.util.HashSet;
-import java.util.HashMap;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Random;
-import java.util.Stack;
-import java.util.Iterator;
-import java.util.LinkedList;
-
-import java.io.IOException;
-import java.io.FileOutputStream;
-import java.io.ObjectOutputStream;
-
-import java.util.concurrent.Callable;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Future;
-
-//custom classes
+import java.util.*;
+import java.util.concurrent.*;
+import java.io.*;
 import it.unimi.dsi.webgraph.BVGraph;
 import it.unimi.dsi.webgraph.IncrementalImmutableSequentialGraph;
 import it.unimi.dsi.webgraph.labelling.ArcLabelledImmutableGraph;
@@ -31,316 +8,116 @@ import it.unimi.dsi.webgraph.ImmutableGraph;
 import it.unimi.dsi.webgraph.labelling.Label;
 import it.unimi.dsi.webgraph.NodeIterator;
 import it.unimi.dsi.webgraph.LazyIntIterator;
-
-/**
- * Class that takes a probability graph G and finds a coarsened graph G' 
- * This is done using Algorithm 1 from the "Coarsen Massive influence Networks 
- * For Scalable Diffusion analysis"
- *
- */
-public class Coarsen {
-    int r; // number of samples of graph G
-    ArcLabelledImmutableGraph G; // probabilistic graph G
-    int Gn; // Number of vertices in base graph
-    int n; // Number of nodes in the finalUniverse graph
-    ImmutableGraph finalUniverse; // after r instances
-    ImmutableGraph finalUniverse_t; // transpose graph
-    ImmutableGraph Ci; // after r instances
-    ImmutableGraph Ci_t; // transpose graph
-    HashMap<Integer, ArrayList<Integer>> Ci_SCC;
-    HashMap<ArrayList<Integer>, Integer> q; // defined in 4.1
-    HashMap<Integer, HashSet<Integer>> F; // defined in 4.1
-    HashMap<Integer, Integer> pi; // defined in 4.1
-    HashMap<Integer, ArrayList<Integer>> SCC; // W --> set of keys; and w --> .size of each value; defined in 4.1
-    /**
-     * System.out.println is way too much to type
-     * So I made this.
-     * @param Generic s (whatever you may want to print)
-     */
-    public static <S> void print(S s){
-	System.out.println(s);
+// Outer class
+public class Coarsen{
+    String ext = "_temp";
+    ArcLabelledImmutableGraph PG;
+    int nodes;
+    String basename;
+    int r;
+    ImmutableGraph FU;
+    public Coarsen(String basename, int r) throws Exception{
+	this.basename = basename;
+	this.r = r;
+	this.PG = ArcLabelledImmutableGraph.load("graphs/"+basename+".w");
+	this.nodes = PG.numNodes();
+	makeFinalUniverse();
     }
-    /**
-     * Initialized the corasenGraph object
-     * @params String of the graph files base name and the number of worlds
-     */
-    public Coarsen(String basename, int num_of_worlds) throws Exception{
-	r = num_of_worlds;
-	print("Number of sampled graphs: "+r);
-
-	G = ArcLabelledImmutableGraph.load("graphs/"+basename+".w");
-	print(basename+" graph loaded");
-
-	Gn = G.numNodes();
-	print("The "+basename+" graph has "+Gn+" vertices.");
-
-	print("Create the final universe graph");
-	createFinalUniverse(basename);
-	finalUniverse = ImmutableGraph.loadMapped("graphs/"+basename+"_FU");
-	n = finalUniverse.numNodes();
-	print("The number of nodes of final is: " + n + " Number of edges is: " + finalUniverse.numArcs());
-
-	print("Create final universe transpose graph");
-	getTranspose(finalUniverse, basename, "_FU");	
-	finalUniverse_t = ImmutableGraph.loadMapped("graphs/"+basename+"_FUt");
-
-	print("Now find the SCC\'s");
-	getSCCs(finalUniverse, finalUniverse_t, SCC); // prints the number of SCC's
-	// --- Build W, F, pi, and w
-	// --> The keys of SCC is the set W
-	// --> the pi is pi. 
-	// --> the .size of each value in SCC is w
-	// --> F = make a graph of c_i's
-
-	print("Make the sets in F");
-	makeF(); // prints the size of F and the number of edges
-
-	print("Making q array");
-	refine_q();
-	print("Finished");
-    }
-    /**
-     * @params Takes in basename to create the final universe graph
-     */
-    public void createFinalUniverse(String basename) throws Exception{
+    public void makeFinalUniverse() throws Exception{
 	Random rand = new Random();
-	// EACH NODE
+	InstanceGraph Plast;
+	InstanceGraph Pcurr;
 	for (int q = 0; q<r; q++){
+	    
 	    final IncrementalImmutableSequentialGraph gg = new IncrementalImmutableSequentialGraph();
 	    ExecutorService executor = Executors.newSingleThreadExecutor();
 	    final Future<Void> future = executor.submit(new Callable<Void>(){
 		    public Void call() throws IOException {
-			BVGraph.store(gg, "graphs/"+basename+"_FU");
+			BVGraph.store(gg, "graphs/"+basename+ext);
 			return null;
 		    }
 		});
-	    	        
-	    for (int v = 0; v<Gn; v++){
-		ArrayList<Integer> edges = new ArrayList<Integer>();
-		int [] v_neighbours = G.successorArray(v);
-		Label[] v_labels = G.labelArray(v);
-		int v_degs = G.outdegree(v);
-		// EACH EDGE
-		for (int i= 0; i<v_degs; i++){
-		    int u = v_neighbours[i];
-		    Label label = v_labels[i];
-		    int count = 0;
-		    int w = (int)label.getLong();
-		    if (rand.nextInt(1000) <= w){
-			edges.add(u);
-		    }
-		}
-		int [] arr = new int[edges.size()];
-		int a_count = 0;
-		for(Integer a: edges){
-		    arr[a_count] = a;
-		    a_count++;
-		}
-		gg.add(arr, 0, arr.length);
-	    }
 
-	    // stuff to close
+	    for (int v = 0; v<nodes; v++){
+		ArrayList<Integer> edges = new ArrayList<Integer>();
+		 int [] v_neighbours = PG.successorArray(v);
+		 Label[] v_labels = PG.labelArray(v);
+		 int v_degs = PG.outdegree(v);
+		 for (int i = 0; i<v_degs; i++){
+		     int u = v_neighbours[i];
+		     Label label = v_labels[i];
+		     int weight = (int)label.getLong();
+		     if (rand.nextInt(1000) <= weight)
+			 edges.add(u);
+		 }
+		 int [] arr = new int[edges.size()];
+		 int count = 0;
+		 for (Integer a: edges){
+		     arr[count] = a;
+		     count++;
+		 }
+		 gg.add(arr, 0, arr.length);
+	    }
 	    gg.add(IncrementalImmutableSequentialGraph.END_OF_GRAPH);
 	    future.get();
 	    executor.shutdown();
-	    
 	    if (q == 0){
-		finalUniverse = ImmutableGraph.loadMapped("graphs/"+basename+"_FU");
-		n = finalUniverse.numNodes();
-		getTranspose(finalUniverse, basename, "_FU");
-		finalUniverse_t = ImmutableGraph.loadMapped("graphs/"+basename+"_FUt");
-		getSCCs(finalUniverse, finalUniverse_t, SCC);
-
+		Plast = new InstanceGraph();
 	    }
 	    else{
-		Ci = ImmutableGraph.loadMapped("graphs/"+basename+"_temp");
-		getTranspose(Ci, basename, "_tempt");
-		Ci_t = ImmutableGraph.loadMapped("graphs/"+basename+"_tempt");
-		Ci_SCC = new HashMap<Integer, ArrayList<Integer>>(); 
-		getSCCs(finalUniverse, finalUniverse_t, SCC);
-		MEET(SCC, Ci_SCC); // updates SCC
-		updateFU();
+		Pcurr = new InstanceGraph();
 	    }
 	}
     }
-    /**
-     * Calculates the transpose graph. NB: this may not be very space efficient
-     * @params String basename, for making the final universe transpose
-     */
-    public void getTranspose(ImmutableGraph graph, String basename, String ext) throws Exception{
-	// temp storage for adj list, while we pull out the transpose adj lists
-	@SuppressWarnings("unchecked")
-	    LinkedList<Integer> [] adj_list = new LinkedList[Gn];
-	for (int a = 0; a< Gn; a++)
-	    adj_list[a] = new LinkedList<Integer>();
-	// iterate over finalUniverse the first time! so now numNodes can be called and what have you
-	for (int v = 0; v<Gn; v++){
-	    int [] v_neighbours = graph.successorArray(v);
-	    int v_degs = graph.outdegree(v);
-	    for (int i = 0; i<v_degs; i++){
-		int u = v_neighbours[i];
-		adj_list[u].add(v);
-	    }
+    // inner class 1
+    public class InstanceGraph{
+	ImmutableGraph graph;
+	ImmutableGraph graphT;
+	public InstanceGraph() throws Exception{
+	    this.graph = ImmutableGraph.loadMapped("graphs/"+basename+ext);
+	    getTrans();
 	}
-	final IncrementalImmutableSequentialGraph gg = new IncrementalImmutableSequentialGraph();
-	ExecutorService executor = Executors.newSingleThreadExecutor();
-	final Future<Void> future = executor.submit(new Callable<Void>(){
-		public Void call() throws IOException {
-		    BVGraph.store(gg, "graphs/"+basename+ext);
-		    return null;
-		}
-	    });
-	// add all the adj list to transpose graph
-	for(LinkedList<Integer> a: adj_list){
-	    int [] dumdum = new int[a.size()];
-	    // convert linkedlist to arr
-	    for (int i = 0; i<a.size(); i++)
-		dumdum[i] = a.get(i);
-	    Arrays.sort(dumdum);
-	    gg.add(dumdum, 0, dumdum.length);
-	}
-	// stuff to close 
-	gg.add(IncrementalImmutableSequentialGraph.END_OF_GRAPH);
-	future.get();
-	executor.shutdown();
-    }
-    /**
-     * 
-     */
-    public void getSCCs(ImmutableGraph graph, ImmutableGraph graph_t, HashMap<Integer, ArrayList<Integer>> SCC){
-	pi =  new HashMap<Integer, Integer>();
-	int num_cc = 0;
-	Stack<Integer> stack = new Stack<Integer>();
-	// mark nodes as not visited for first run
-	boolean [] visited = new boolean[n];
-	for (int i = 0; i<n; i++)
-	    visited[i] = false;
-	// fill nodes in stack
-	for (int i = 0; i< n; i++)
-	    if (visited[i]==false)
-		fillOrder(i, visited, stack, graph);
-	// second run, clean visited
-	for (int i = 0; i<n; i++)
-	    visited[i] = false;
-	// iterator over nodes aligned in the stack
-	// and mark as nodes are visited
-	while (stack.empty() == false){
-	    int v = (int)stack.pop();
-	    if (visited[v] == false){
-		DFS(v, visited, num_cc, graph_t);
-		num_cc++; // next CC
-	    }
-	}
-	print("Number of SCC's: "+num_cc);
-    }
-    /**
-     * Traverses the final Universe Graph 
-     * @params int v (the node we are visiting now); bool arr of nodes visited; Stack of nodes to be visited
-     */
-    public void fillOrder(int v, boolean [] visited, Stack<Integer> stack, ImmutableGraph graph){
-	visited[v] = true;
-	int [] v_neighbours = graph.successorArray(v);
-	int v_degs = graph.outdegree(v);
-	for (int i = 0; i<v_degs; i++){
-	    int u = v_neighbours[i];
-	    if(visited[u] == false)
-		fillOrder(u, visited, stack, graph);
-	}
-	stack.push(Integer.valueOf(v));
-    }
-    /**
-     * @params node v, bool arr of visited nodes
-     */
-    public void DFS(int v, boolean [] visited, int num_cc, ImmutableGraph graph_t){
-	visited[v] = true;
-	// add node to this cc
-	pi.put(Integer.valueOf(v), Integer.valueOf(num_cc));
-	ArrayList<Integer> curr_list = SCC.get(Integer.valueOf(num_cc));
-	if (curr_list == null)
-	    curr_list = new ArrayList<Integer>();
-	curr_list.add(v);
-	SCC.put(Integer.valueOf(num_cc), curr_list);
-	int [] v_neighbours = graph_t.successorArray(v);
-	int v_degs = graph_t.outdegree(v);
-	for (int i = 0; i<v_degs; i++){
-	    int u = v_neighbours[i];
-	    if(visited[u] == false)
-		DFS(u, visited, num_cc, graph_t);
-	}	
-    }
-
-    public void MEET(HashMap<Integer, ArrayList<Integer>> SCC, HashMap<Integer, ArrayList<Integer>> Ci_SCC ){
-	HashMap<Integer, ArrayList<Integer>> temp = new HashMap<Integer, ArrayList<Integer>>();
-	
-    }
-    
-    public void updateFU(){
-	
-    }
-
-    /**
-     * Creates F, which is a set of edges between clusters
-     */
-    public void makeF() throws Exception{
-	F = new HashMap<Integer, HashSet<Integer>>();
-	q = new HashMap<ArrayList<Integer>, Integer>();
-	int m = SCC.size();
-	int edge_num = 0;
-	for (int cx = 0; cx<m; cx++){
-	    ArrayList<Integer> nodes = SCC.get(cx);
-	    HashSet<Integer> edges = new HashSet<Integer>();
-	    for (Integer v: nodes){
-		int [] v_neighbours = finalUniverse.successorArray(v);
-		int v_degs = finalUniverse.outdegree(v);
-		for (int i = 0; i < v_degs; i++){
+	public void getTrans() throws Exception{
+	    @SuppressWarnings("unchecked")
+		LinkedList<Integer> [] adj_list = new LinkedList[nodes];
+	    for (int a = 0; a< nodes; a++)
+		adj_list[a] = new LinkedList<Integer>();
+	    for (int v = 0; v<nodes; v++){
+		int [] v_neighbours = graph.successorArray(v);
+		int v_degs = graph.outdegree(v);
+		for (int i = 0; i<v_degs; i++){
 		    int u = v_neighbours[i];
-      		    int cy = pi.get(u);
-		    if (cx != cy){
-			edges.add(cy);
-			ArrayList<Integer> key = new ArrayList<Integer>();
-			key.add(cx);
-			key.add(cy);
-			q.put(key, 1);
-		    }
-		}	
-	    }
-	    F.put(Integer.valueOf(cx), edges);
-	    edge_num += edges.size();
-	}
-	print("The number of coarsened nodes is: " + F.size() + " Number of edges is: " + edge_num);
-    }
-    /**
-     * @params string basename
-     */
-    public void refine_q() throws Exception{
-	for(int v = 0; v<Gn; v++){
-	    int[] v_neighbours = G.successorArray(v);
-	    Label[] v_labels = G.labelArray(v);
-	    int v_degs = G.outdegree(v);
-	    for (int i = 0; i<v_degs; i++){
-		int u = v_neighbours[i];
-		Label label = v_labels[i];
-		int w = (int)label.getLong();
-		int pi_v = pi.get(v);
-		int pi_u = pi.get(u);
-		if(F.get(pi_v).contains(pi_u)){ 
-		    ArrayList<Integer> key = new ArrayList<Integer>();
-		    key.add(pi_v);
-		    key.add(pi_u);
-		    q.put(key, q.get(key) * (1000 - w)); 
+		    adj_list[u].add(v);
 		}
 	    }
-	}
-	//11
-	int a = SCC.size();
-	for(int cx = 0; cx < a; cx++){
-	    HashSet<Integer> edges = F.get(cx);
-	    for(Integer cy: edges){
-		ArrayList<Integer> key = new ArrayList<Integer>();
-		key.add(cx);
-		key.add(cy);
-		q.put(key, 1-q.get(key));
+	    final IncrementalImmutableSequentialGraph gg = new IncrementalImmutableSequentialGraph();
+	    ExecutorService executor = Executors.newSingleThreadExecutor();
+	    final Future<Void> future = executor.submit(new Callable<Void>(){
+		    public Void call() throws IOException {
+			BVGraph.store(gg, "graphs/"+basename+ext+"_t");
+			return null;
+		    }
+		});
+	    for(LinkedList<Integer> a: adj_list){
+		int [] dumdum = new int[a.size()];
+		for (int i = 0; i<a.size(); i++)
+		    dumdum[i] = a.get(i);
+		Arrays.sort(dumdum);
+		gg.add(dumdum, 0, dumdum.length);
 	    }
+	    gg.add(IncrementalImmutableSequentialGraph.END_OF_GRAPH);
+	    future.get();
+	    executor.shutdown();
+	    this.graphT = ImmutableGraph.loadMapped("graphs/"+basename+ext+"_t");
+	}
+	
+    }
+    // inner class 2
+    public class SCC{
+	int [] scc;
+	InstanceGraph graph;
+	public SCC() throws Exception{
+	    
 	}
     }
 }
