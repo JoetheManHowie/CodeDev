@@ -1,3 +1,6 @@
+/*
+ * Joe Howie May 12th 2021
+ */
 import java.util.*;
 import java.util.concurrent.*;
 import java.io.*;
@@ -9,6 +12,10 @@ import it.unimi.dsi.webgraph.labelling.Label;
 import it.unimi.dsi.webgraph.NodeIterator;
 import it.unimi.dsi.webgraph.LazyIntIterator;
 // Outer class
+/**
+ * Corasen is the main class here. It contains several inner classes 
+ * which help construct the coarsened graph from the probabistic graph
+ */
 public class Coarsen{
     String ext = "_temp";
     ArcLabelledImmutableGraph PG;
@@ -16,19 +23,24 @@ public class Coarsen{
     String basename;
     int r;
     ImmutableGraph FU;
+    // print like python & matlab
+    public static <S> void print(S s){
+	System.out.println(s);
+    }
     public Coarsen(String basename, int r) throws Exception{
 	this.basename = basename;
 	this.r = r;
 	this.PG = ArcLabelledImmutableGraph.load("graphs/"+basename+".w");
 	this.nodes = PG.numNodes();
-	makeFinalUniverse();
+	makeCoarse();
     }
-    public void makeFinalUniverse() throws Exception{
+    public void makeCoarse() throws Exception{
 	Random rand = new Random();
-	InstanceGraph Plast;
-	InstanceGraph Pcurr;
+	InstanceGraph P_i;
+	SCC SCClast = new SCC();
+	SCC SCCcurr = new SCC();
 	for (int q = 0; q<r; q++){
-	    
+	    print("Graph : "+q);
 	    final IncrementalImmutableSequentialGraph gg = new IncrementalImmutableSequentialGraph();
 	    ExecutorService executor = Executors.newSingleThreadExecutor();
 	    final Future<Void> future = executor.submit(new Callable<Void>(){
@@ -47,8 +59,10 @@ public class Coarsen{
 		     int u = v_neighbours[i];
 		     Label label = v_labels[i];
 		     int weight = (int)label.getLong();
-		     if (rand.nextInt(1000) <= weight)
+		     if (rand.nextInt(1000) <= weight){
+			 print(v+" "+u);
 			 edges.add(u);
+		     }
 		 }
 		 int [] arr = new int[edges.size()];
 		 int count = 0;
@@ -61,15 +75,16 @@ public class Coarsen{
 	    gg.add(IncrementalImmutableSequentialGraph.END_OF_GRAPH);
 	    future.get();
 	    executor.shutdown();
-	    if (q == 0){
-		Plast = new InstanceGraph();
-	    }
-	    else{
-		Pcurr = new InstanceGraph();
-	    }
+	    P_i = new InstanceGraph();
+	    SCCcurr = new SCC(P_i);
+	    SCClast.meet(SCCcurr);
+	    SCCcurr.printSCC();
 	}
     }
     // inner class 1
+    /**
+     * This class holds the graph and transpose graph for a sampling of PG
+     */
     public class InstanceGraph{
 	ImmutableGraph graph;
 	ImmutableGraph graphT;
@@ -113,11 +128,103 @@ public class Coarsen{
 	
     }
     // inner class 2
+    /**
+     * This class finds the SCC of an instant graph
+     */
     public class SCC{
+	int num_scc;
 	int [] scc;
 	InstanceGraph graph;
+	Stack<Integer> stack;
+	boolean[] visited;
+	public SCC(InstanceGraph graph) throws Exception{
+	    scc = new int[nodes];
+	    this.graph = graph;
+	    findSCC();
+	}
 	public SCC() throws Exception{
+	    scc = new int[nodes];
+	    blankSCC();
+	}
+	private void blankSCC() throws Exception{
+	    for (int i = 0; i < nodes; i++)
+		scc[i] = 0;
+	}
+	public void printSCC()throws Exception{
+	    for(int i = 0; i<nodes; i++)
+		print("Node : " + i +"\t"+scc[i]);
+	}
+	public void meet(SCC other) throws Exception{
+	    HashMap<Pair, Integer> map = new HashMap<Pair, Integer>();
+	    int ll = 0;
+	    int [] M = new int[nodes];
 	    
+	    for (int i = 0; i < nodes; i++){
+		Pair pair  = new Pair(this.scc[i], other.scc[i]);
+		if (!map.containsKey(pair)){
+		    map.put(pair, ll);
+		    ll++;
+		}
+		M[i] = map.get(pair);
+	    }	
+	    for (int i = 0; i<nodes; i++)
+		scc[i] = M[i];
+	}
+	public void findSCC() throws Exception{
+	    num_scc = 0;
+	    stack = new Stack<Integer>();
+	    visited = new boolean[nodes];
+	    set_visit_to_false();
+	    for (int i = 0; i<nodes; i++)
+		if (visited[i] == false)
+		    fillOrder(i);
+	    set_visit_to_false();
+	    while (stack.empty() == false){
+		int v = (int)stack.pop();
+		if (visited[v] == false){
+		    DFS(v);
+		    num_scc++;
+		}
+	    }
+	    print("Number of SCC: "+num_scc);
+	    
+	}
+	private void set_visit_to_false(){
+	    for(int i = 0; i<nodes; i++)
+		visited[i] = false;
+	}
+	private void DFS(int v){
+	    visited[v] = true;
+	    scc[v] = num_scc;
+	    int [] v_neighbours = graph.graphT.successorArray(v); 
+	    int v_degs = graph.graphT.outdegree(v);
+	    for (int i = 0; i<v_degs; i++){
+		int u = v_neighbours[i];
+		if (visited[u] == false)
+		    DFS(u);
+	    }
+	}
+	private void fillOrder(int v){
+	    visited[v] = true;
+	    int [] v_neighbours = graph.graph.successorArray(v);
+	    int v_degs = graph.graph.outdegree(v);
+	    for (int i = 0; i<v_degs; i++){
+		int u = v_neighbours[i];
+		if(visited[u] == false)
+		    fillOrder(u);
+	    }
+	    stack.push(Integer.valueOf(v));
+	}
+    }
+    /**
+     * for hash keys
+     */
+    public class Pair{
+	int i;
+	int j;
+	public Pair(int i, int j){
+	    this.i = i;
+	    this.j = j;
 	}
     }
 }
