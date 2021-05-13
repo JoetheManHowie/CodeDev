@@ -12,6 +12,7 @@ import it.unimi.dsi.webgraph.labelling.Label;
 import it.unimi.dsi.webgraph.NodeIterator;
 import it.unimi.dsi.webgraph.LazyIntIterator;
 // Outer class
+
 /**
  * Corasen is the main class here. It contains several inner classes 
  * which help construct the coarsened graph from the probabistic graph
@@ -77,8 +78,12 @@ public class Coarsen{
 	    executor.shutdown();
 	    P_i = new InstanceGraph();
 	    SCCcurr = new SCC(P_i);
+	    print("New sampled connected components");
+	    SCCcurr.printSCC();	    
+	    SCClast.printSCC();
 	    SCClast.meet(SCCcurr);
-	    SCCcurr.printSCC();
+	    print("After the meet");
+	    SCClast.printSCC();
 	}
     }
     // inner class 1
@@ -161,11 +166,14 @@ public class Coarsen{
 	    
 	    for (int i = 0; i < nodes; i++){
 		Pair pair  = new Pair(this.scc[i], other.scc[i]);
+		//print(pair.i+" "+pair.j);
 		if (!map.containsKey(pair)){
+		    //print(pair.i+" "+pair.j);
 		    map.put(pair, ll);
 		    ll++;
 		}
 		M[i] = map.get(pair);
+		//print("M "+M[i]);
 	    }	
 	    for (int i = 0; i<nodes; i++)
 		scc[i] = M[i];
