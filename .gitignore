@@ -4,6 +4,8 @@
 *.sh
 *#
 #*
+*old*
+*temp*
 py_scripts/
 bin/
 graphs/

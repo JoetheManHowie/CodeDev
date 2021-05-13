@@ -53,25 +53,25 @@ public class Coarsen{
 
 	    for (int v = 0; v<nodes; v++){
 		ArrayList<Integer> edges = new ArrayList<Integer>();
-		 int [] v_neighbours = PG.successorArray(v);
-		 Label[] v_labels = PG.labelArray(v);
-		 int v_degs = PG.outdegree(v);
-		 for (int i = 0; i<v_degs; i++){
-		     int u = v_neighbours[i];
-		     Label label = v_labels[i];
-		     int weight = (int)label.getLong();
-		     if (rand.nextInt(1000) <= weight){
-			 print(v+" "+u);
-			 edges.add(u);
-		     }
+		int [] v_neighbours = PG.successorArray(v);
+		Label[] v_labels = PG.labelArray(v);
+		int v_degs = PG.outdegree(v);
+		for (int i = 0; i<v_degs; i++){
+		    int u = v_neighbours[i];
+		    Label label = v_labels[i];
+		    int weight = (int)label.getLong();
+		    if (rand.nextInt(1000) <= weight){
+			print(v+" "+u);
+			edges.add(u);
+		    }
+		}
+		int [] arr = new int[edges.size()];
+		int count = 0;
+		for (Integer a: edges){
+		    arr[count] = a;
+		    count++;
 		 }
-		 int [] arr = new int[edges.size()];
-		 int count = 0;
-		 for (Integer a: edges){
-		     arr[count] = a;
-		     count++;
-		 }
-		 gg.add(arr, 0, arr.length);
+		gg.add(arr, 0, arr.length);
 	    }
 	    gg.add(IncrementalImmutableSequentialGraph.END_OF_GRAPH);
 	    future.get();
@@ -130,7 +130,6 @@ public class Coarsen{
 	    executor.shutdown();
 	    this.graphT = ImmutableGraph.loadMapped("graphs/"+basename+ext+"_t");
 	}
-	
     }
     // inner class 2
     /**
@@ -166,7 +165,8 @@ public class Coarsen{
 	    
 	    for (int i = 0; i < nodes; i++){
 		Pair pair  = new Pair(this.scc[i], other.scc[i]);
-		//print(pair.i+" "+pair.j);
+		print(pair.i+" "+pair.j);
+		print(map.containsKey(pair));
 		if (!map.containsKey(pair)){
 		    //print(pair.i+" "+pair.j);
 		    map.put(pair, ll);
@@ -225,14 +225,23 @@ public class Coarsen{
 	}
     }
     /**
-     * for hash keys
+     * for hash keys, I dislike the Integer class, but here we are..you may get a deprecated warning its fine.
      */
     public class Pair{
-	int i;
-	int j;
+	private Integer i;
+	private Integer j;
 	public Pair(int i, int j){
-	    this.i = i;
-	    this.j = j;
+	    this.i = new Integer(Integer.valueOf(i));
+	    this.j = new Integer(Integer.valueOf(j));
+	}
+	// src: https://bit.ly/3eK1P1B
+	@Override
+	public int hashCode(){
+	    return i.hashCode() ^ j.hashCode();
+	}
+	@Override
+	public boolean equals(Object obj){
+	    return (obj instanceof Pair ) && ((Pair) obj).i.equals(i) && ((Pair) obj).j.equals(j);
 	}
     }
 }
