@@ -1,4 +1,3 @@
-
 /*
  * Joe Howie May 12th 2021
  */
@@ -276,12 +275,16 @@ public class Coarsen{
 	}
 	private void build_bag() throws Exception{
 	    bag = new HashMap<Integer, HashSet<Integer>>();
-	    HashSet<Integer> set;
+
 	    for (int v = 0; v<nodes; v++){
+		HashSet<Integer> set;
 		Integer C = Integer.valueOf(scc.pie[v]);
 		print(v+": "+C);
-		set = bag.get(C);
-		set.add(v);
+		if (bag.containsKey(C))
+		    set = new HashSet<Integer>();
+		else
+		    set = bag.get(C);
+		print(set.add(Integer.valueOf(v)));
 		bag.put(C, set);
 	    }
 	}
