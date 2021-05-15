@@ -1,3 +1,4 @@
+
 /*
  * Joe Howie May 12th 2021
  */
@@ -23,7 +24,9 @@ public class Coarsen{
     int nodes;
     String basename;
     int r;
-    ImmutableGraph FU;
+    InstanceGraph P_i;
+    SCC pie;
+    VWIG H; //def from 4.1 (VWIG: Vertex Weighted Influence Graph)
     // print like python & matlab
     public static <S> void print(S s){
 	System.out.println(s);
@@ -33,13 +36,15 @@ public class Coarsen{
 	this.r = r;
 	this.PG = ArcLabelledImmutableGraph.load("graphs/"+basename+".w");
 	this.nodes = PG.numNodes();
-	makeCoarse();
+	makeCoarse(); // after this, we have FU (the final intersection of all the sa), and its SCC
+	print(pie.pie[4]);
+	H = new VWIG(pie);
+	H.see_bag();
     }
     public void makeCoarse() throws Exception{
 	Random rand = new Random();
-	InstanceGraph P_i;
-	SCC SCClast = new SCC();
-	SCC SCCcurr = new SCC();
+	SCC curr = new SCC();
+	pie = new SCC();
 	for (int q = 0; q<r; q++){
 	    print("Graph : "+q);
 	    final IncrementalImmutableSequentialGraph gg = new IncrementalImmutableSequentialGraph();
@@ -77,13 +82,12 @@ public class Coarsen{
 	    future.get();
 	    executor.shutdown();
 	    P_i = new InstanceGraph();
-	    SCCcurr = new SCC(P_i);
+	    curr = new SCC(P_i);
 	    print("New sampled connected components");
-	    SCCcurr.printSCC();	    
-	    SCClast.printSCC();
-	    SCClast.meet(SCCcurr);
+	    curr.printSCC();	    
+	    pie.meet(curr);
 	    print("After the meet");
-	    SCClast.printSCC();
+	    pie.printSCC();
 	}
     }
     // inner class 1
@@ -137,26 +141,26 @@ public class Coarsen{
      */
     public class SCC{
 	int num_scc;
-	int [] scc;
+	int [] pie;
 	InstanceGraph graph;
-	Stack<Integer> stack;
-	boolean[] visited;
+	private Stack<Integer> stack;
+	private boolean[] visited;
 	public SCC(InstanceGraph graph) throws Exception{
-	    scc = new int[nodes];
+	    pie = new int[nodes];
 	    this.graph = graph;
 	    findSCC();
 	}
 	public SCC() throws Exception{
-	    scc = new int[nodes];
+	    pie = new int[nodes];
 	    blankSCC();
 	}
 	private void blankSCC() throws Exception{
 	    for (int i = 0; i < nodes; i++)
-		scc[i] = 0;
+		pie[i] = 0;
 	}
 	public void printSCC()throws Exception{
 	    for(int i = 0; i<nodes; i++)
-		print("Node : " + i +"\t"+scc[i]);
+		print("Node : " + i +"\t"+pie[i]);
 	}
 	public void meet(SCC other) throws Exception{
 	    HashMap<Pair, Integer> map = new HashMap<Pair, Integer>();
@@ -164,9 +168,9 @@ public class Coarsen{
 	    int [] M = new int[nodes];
 	    
 	    for (int i = 0; i < nodes; i++){
-		Pair pair  = new Pair(this.scc[i], other.scc[i]);
-		print(pair.i+" "+pair.j);
-		print(map.containsKey(pair));
+		Pair pair  = new Pair(this.pie[i], other.pie[i]);
+		//print(pair.i+" "+pair.j);
+		//print(map.containsKey(pair));
 		if (!map.containsKey(pair)){
 		    //print(pair.i+" "+pair.j);
 		    map.put(pair, ll);
@@ -174,9 +178,14 @@ public class Coarsen{
 		}
 		M[i] = map.get(pair);
 		//print("M "+M[i]);
-	    }	
-	    for (int i = 0; i<nodes; i++)
-		scc[i] = M[i];
+	    }
+	    int temp = 0;
+	    for (int i = 0; i<nodes; i++){
+		if (M[i] > temp)
+		    temp = M[i];
+		pie[i] = M[i];
+	    }
+	    num_scc = temp;
 	}
 	public void findSCC() throws Exception{
 	    num_scc = 0;
@@ -203,7 +212,7 @@ public class Coarsen{
 	}
 	private void DFS(int v){
 	    visited[v] = true;
-	    scc[v] = num_scc;
+	    pie[v] = num_scc;
 	    int [] v_neighbours = graph.graphT.successorArray(v); 
 	    int v_degs = graph.graphT.outdegree(v);
 	    for (int i = 0; i<v_degs; i++){
@@ -242,6 +251,59 @@ public class Coarsen{
 	@Override
 	public boolean equals(Object obj){
 	    return (obj instanceof Pair ) && ((Pair) obj).i.equals(i) && ((Pair) obj).j.equals(j);
+	}
+    }
+    public class VWIG {
+	SCC scc;
+	HashMap<Integer, HashSet<Integer>> bag;
+	HashMap<Pair, Integer> q;
+	HashMap<Integer, HashSet<Integer>> F;
+	int [] w; // W would then be the indicies of w[]
+	
+	public VWIG(SCC scc) throws Exception{
+	    this.scc = scc;
+	    w = new int[scc.num_scc+1];
+	    build_w();
+	    build_bag();
+	    build_qF();
+	}
+	private void build_w() throws Exception{
+	    // build w & W
+	    scc.printSCC();
+	    print(scc.num_scc);
+	    for (int i = 0; i<nodes; i++)
+		w[scc.pie[i]]++;
+	}
+	private void build_bag() throws Exception{
+	    bag = new HashMap<Integer, HashSet<Integer>>();
+	    HashSet<Integer> set;
+	    for (int v = 0; v<nodes; v++){
+		Integer C = Integer.valueOf(scc.pie[v]);
+		print(v+": "+C);
+		set = bag.get(C);
+		set.add(v);
+		bag.put(C, set);
+	    }
+	}
+	public void see_bag() throws Exception{
+	    HashSet<Integer> arr;
+	    for (int c = 0; c < scc.num_scc; c++){
+		arr = bag.get(c);
+		print("Super node: "+c);
+		for (Integer a: arr)
+		    System.out.print(a+" ");
+		
+	    }
+	}
+	private void build_qF() throws Exception{
+	    F = new HashMap<Integer, HashSet<Integer>>();
+	    q = new HashMap<Pair, Integer>();
+	    int m = scc.num_scc;
+	    int edge_num = 0;
+	    for (int cx = 0; cx<m; cx++){
+		//Pair nodes = scc;
+		
+	    }
 	}
     }
 }
