@@ -265,7 +265,10 @@ public class Coarsen{
 	    build_w();
 	    bag = new HashMap<Integer, HashSet<Integer>>();
 	    build_bag();
+	    F = new HashMap<Integer, HashSet<Integer>>();
+	    q = new HashMap<Pair, Integer>();
 	    build_qF();
+	    refine_q();
 	}
 	private void build_w() throws Exception{
 	    // build w & W
@@ -278,32 +281,77 @@ public class Coarsen{
 	    for (int v = 0; v<nodes; v++){
 		Integer C = Integer.valueOf(scc.pie[v]);
 		HashSet<Integer> set = new HashSet<Integer>();
-		print(v+": "+C);
 		if (bag.get(C) != null)
 		    set = bag.get(C);
-		print(set);
 		set.add(Integer.valueOf(v));
 		bag.put(C, set);
 	    }
 	}
 	public void see_bag() throws Exception{
 	    HashSet<Integer> arr;
-	    for (int c = 0; c < scc.num_scc; c++){
-		arr = bag.get(c);
-		print("Super node: "+c);
+	    for (int c = 0; c < scc.num_scc+1; c++){
+		arr = bag.get(Integer.valueOf(c));
+		System.out.print("\nSuper node "+c+": ");
 		for (Integer a: arr)
 		    System.out.print(a+" ");
-		
 	    }
+	    print("");
 	}
 	private void build_qF() throws Exception{
-	    F = new HashMap<Integer, HashSet<Integer>>();
-	    q = new HashMap<Pair, Integer>();
 	    int m = scc.num_scc;
 	    int edge_num = 0;
 	    for (int cx = 0; cx<m; cx++){
-		//Pair nodes = scc;
-		
+		HashSet<Integer> nodes = bag.get(cx);
+		HashSet<Integer> edges = new HashSet<Integer>();
+		for (Integer v: nodes){
+		    int [] v_neighbours = P_i.graph.successorArray(v);
+		    int v_degs = P_i.graph.outdegree(v);
+		    for (int i = 0; i<v_degs; i++){
+			int u = v_neighbours[i];
+			int cy = scc.pie[u];
+			if (cx != cy){
+			    edges.add(cy);
+			    Pair key = new Pair(cx, cy);
+			    q.put(key, 1);
+			}
+		    }
+		}
+		F.put(Integer.valueOf(cx), edges);
+		edge_num += edges.size();
+	    }
+	     print("The number of coarsened nodes is: " + F.size() + " Number of edges is: " + edge_num);
+	}
+
+	private void refine_q() throws Exception{
+	    print("Refine q");
+	    for (int v = 0; v<nodes; v++){
+		int [] v_neighbours = PG.successorArray(v);
+		Label [] v_labels = PG.labelArray(v);
+		int v_degs = PG.outdegree(v);
+		for (int i = 0; i<v_degs; i++){
+		    int u = v_neighbours[i];
+		    //print(v+" "+u);
+		    Label label = v_labels[i];
+		    int weight = (int)label.getLong();
+		    int pi_v = scc.pie[v];
+		    int pi_u = scc.pie[u];
+		    //print(pi_v+" "+pi_u);
+		    //print(F.get(pi_v));
+		    if (F.get(pi_v) == null)
+			continue;
+		    if (F.get(pi_v).contains(pi_u)){
+			Pair key = new Pair(pi_v, pi_u);
+			//print(q.get(key));
+			q.put(key, q.get(key) * (1000 - weight));
+		    }
+		}
+	    }
+	    for (int cx = 0; cx<scc.num_scc; cx++){
+		HashSet<Integer> edges = F.get(cx);
+		for (Integer cy: edges){
+		    Pair key = new Pair(cx, cy);
+		    q.put(key, 1 - q.get(key));
+		}
 	    }
 	}
     }
