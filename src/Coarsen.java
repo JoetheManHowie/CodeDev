@@ -263,6 +263,7 @@ public class Coarsen{
 	    this.scc = scc;
 	    w = new int[scc.num_scc+1];
 	    build_w();
+	    bag = new HashMap<Integer, HashSet<Integer>>();
 	    build_bag();
 	    build_qF();
 	}
@@ -274,17 +275,14 @@ public class Coarsen{
 		w[scc.pie[i]]++;
 	}
 	private void build_bag() throws Exception{
-	    bag = new HashMap<Integer, HashSet<Integer>>();
-
 	    for (int v = 0; v<nodes; v++){
-		HashSet<Integer> set;
 		Integer C = Integer.valueOf(scc.pie[v]);
+		HashSet<Integer> set = new HashSet<Integer>();
 		print(v+": "+C);
-		if (bag.containsKey(C))
-		    set = new HashSet<Integer>();
-		else
+		if (bag.get(C) != null)
 		    set = bag.get(C);
-		print(set.add(Integer.valueOf(v)));
+		print(set);
+		set.add(Integer.valueOf(v));
 		bag.put(C, set);
 	    }
 	}
