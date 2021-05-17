@@ -314,7 +314,7 @@ public class Coarsen{
 			if (cx != cy){
 			    edges.add(cy);
 			    Pair key = new Pair(cx, cy);
-			    q.put(key, 1);
+			    q.put(key, 1000);
 			}
 		    }
 		}
@@ -370,7 +370,7 @@ public class Coarsen{
 		HashSet<Integer> edges = F.get(cx);
 		for (Integer cy: edges){
 		    Pair key = new Pair(cx, cy);
-		    q.put(key, 1 - q.get(key));
+		    q.put(key, 1000 - q.get(key));
 		}
 	    }
 	}
