@@ -39,6 +39,8 @@ public class Coarsen{
 	print(pie.pie[4]);
 	H = new VWIG(pie);
 	H.see_bag();
+	H.print_F();
+	H.print_q();
     }
     public void makeCoarse() throws Exception{
 	Random rand = new Random();
@@ -321,7 +323,25 @@ public class Coarsen{
 	    }
 	     print("The number of coarsened nodes is: " + F.size() + " Number of edges is: " + edge_num);
 	}
-
+	public void print_F(){
+	    //HashMap<Integer, HashSet<Integer>>
+	    print("F");
+	    for(Integer a: F.keySet()){
+		System.out.print(a+": ");
+		for(Integer b: F.get(a)){
+		    System.out.print(b+" ");
+		}
+		print("");
+	    }
+	}
+	public void print_q(){
+	    //HashMap<Pair, Integer>
+	    print("q");
+	    //print(q.keySet());
+	    for(Pair pt: q.keySet()){
+		print(pt.i+" "+pt.j+": "+q.get(pt));
+	    }
+	}
 	private void refine_q() throws Exception{
 	    print("Refine q");
 	    for (int v = 0; v<nodes; v++){
