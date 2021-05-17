@@ -362,7 +362,7 @@ public class Coarsen{
 		    if (F.get(pi_v).contains(pi_u)){
 			Pair key = new Pair(pi_v, pi_u);
 			//print(q.get(key));
-			q.put(key, q.get(key) * (1000 - weight));
+			q.put(key, q.get(key) * (1000 - weight)/1000);
 		    }
 		}
 	    }
