@@ -84,18 +84,9 @@ public class GraphToEdgelist{
     public static void main(String[] args)throws Exception{
 	long t1 = System.currentTimeMillis();
 	String basename = args[0];
-	String distro_flag = args[1]; // 0 = uniform (all 10), 1 = {100, 10, 1}, 2 = exponential, 3 = weighted (d_in) 
 	GraphToEdgelist edgelist = new GraphToEdgelist(basename);
-	switch(distro_flag){
-	case "0": edgelist.uniform();
-	    break;
-	case "1": edgelist.trivalency();
-	    break;
-	case "2": edgelist.exponential();
-	    break;
-	case "3": edgelist.weighted();
-	default: break; 
-	}
+	edgelist.exponential();
+	edgelist.trivalency();
 	print("Done! "+(System.currentTimeMillis()-t1)/1000.0+" seconds");
     }
 }
