@@ -306,8 +306,8 @@ public class Coarsen{
 		HashSet<Integer> nodes = bag.get(cx);
 		HashSet<Integer> edges = new HashSet<Integer>();
 		for (Integer v: nodes){
-		    int [] v_neighbours = P_i.graph.successorArray(v);
-		    int v_degs = P_i.graph.outdegree(v);
+		    int [] v_neighbours = PG.successorArray(v);
+		    int v_degs = PG.outdegree(v);
 		    for (int i = 0; i<v_degs; i++){
 			int u = v_neighbours[i];
 			int cy = scc.pie[u];
