@@ -21,6 +21,7 @@ public class Coarsen{
     String ext = "_temp";
     ArcLabelledImmutableGraph PG;
     int nodes;
+    int edges;
     String basename;
     int r;
     InstanceGraph P_i;
@@ -34,20 +35,31 @@ public class Coarsen{
 	this.basename = basename;
 	this.r = r;
 	this.PG = ArcLabelledImmutableGraph.load("graphs/"+basename+".w");
+	this.edges = (int)PG.numArcs();
 	this.nodes = PG.numNodes();
+	
+	print("Sampling the graph "+r+" times.");
 	makeCoarse(); // after this, we have FU (the final intersection of all the sa), and its SCC
-	print(pie.pie[4]);
+	
 	H = new VWIG(pie);
-	H.see_bag();
-	H.print_F();
-	H.print_q();
+	//H.see_bag();
+	//H.print_F();
+	//H.print_q();
+    }
+    public double getVertexRatio() throws Exception{
+	double ws = H.W_size();
+	return ws/this.nodes*100;
+    }
+    public double getEdgeRatio() throws Exception{
+	double fs = H.F_size();
+	return fs/this.edges*100;
     }
     public void makeCoarse() throws Exception{
 	Random rand = new Random();
 	SCC curr = new SCC();
 	pie = new SCC();
 	for (int q = 0; q<r; q++){
-	    print("Graph : "+q);
+	    //print("Graph : "+q);
 	    final IncrementalImmutableSequentialGraph gg = new IncrementalImmutableSequentialGraph();
 	    ExecutorService executor = Executors.newSingleThreadExecutor();
 	    final Future<Void> future = executor.submit(new Callable<Void>(){
@@ -67,7 +79,7 @@ public class Coarsen{
 		    Label label = v_labels[i];
 		    int weight = (int)label.getLong();
 		    if (rand.nextInt(1000) <= weight){
-			print(v+" "+u);
+			//print(v+" "+u);
 			edges.add(u);
 		    }
 		}
@@ -84,11 +96,11 @@ public class Coarsen{
 	    executor.shutdown();
 	    P_i = new InstanceGraph();
 	    curr = new SCC(P_i);
-	    print("New sampled connected components");
-	    curr.printSCC();	    
+	    //print("New sampled connected components");
+	    //curr.printSCC();	    
 	    pie.meet(curr);
-	    print("After the meet");
-	    pie.printSCC();
+	    //print("After the meet");
+	    //pie.printSCC();
 	}
     }
     // inner class 1
@@ -204,7 +216,7 @@ public class Coarsen{
 		    num_scc++;
 		}
 	    }
-	    print("Number of SCC: "+num_scc);
+	    //print("Number of SCC: "+num_scc);
 	    
 	}
 	private void set_visit_to_false(){
@@ -274,10 +286,16 @@ public class Coarsen{
 	}
 	private void build_w() throws Exception{
 	    // build w & W
-	    scc.printSCC();
-	    print(scc.num_scc);
+	    //scc.printSCC();
+	    //print(scc.num_scc);
 	    for (int i = 0; i<nodes; i++)
 		w[scc.pie[i]]++;
+	}
+	public int F_size() throws Exception{
+	    return q.size(); // q has prob for each edge in F so same same
+	}
+	public int W_size() throws Exception{
+	    return w.length; 
 	}
 	private void build_bag() throws Exception{
 	    for (int v = 0; v<nodes; v++){
@@ -321,7 +339,7 @@ public class Coarsen{
 		F.put(Integer.valueOf(cx), edges);
 		edge_num += edges.size();
 	    }
-	     print("The number of coarsened nodes is: " + F.size() + " Number of edges is: " + edge_num);
+	    //print("The number of coarsened nodes is: " + F.size()+1 + " Number of edges is: " + edge_num);
 	}
 	public void print_F(){
 	    //HashMap<Integer, HashSet<Integer>>
@@ -343,7 +361,7 @@ public class Coarsen{
 	    }
 	}
 	private void refine_q() throws Exception{
-	    print("Refine q");
+	    //print("Refine q");
 	    for (int v = 0; v<nodes; v++){
 		int [] v_neighbours = PG.successorArray(v);
 		Label [] v_labels = PG.labelArray(v);
@@ -358,7 +376,7 @@ public class Coarsen{
 		    //print(pi_v+" "+pi_u);
 		    //print(F.get(pi_v));
 		    if (F.get(pi_v) == null)
-			continue;
+		    	continue;
 		    if (F.get(pi_v).contains(pi_u)){
 			Pair key = new Pair(pi_v, pi_u);
 			//print(q.get(key));
