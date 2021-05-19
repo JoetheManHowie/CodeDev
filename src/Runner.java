@@ -1,5 +1,9 @@
 /*
  * Joe Howie March 10th
+ *
+ * java -Xss2g -Xmx512m -cp "bin":"lib/*" Runner basename integer
+ *
+ * OPTION: nohup java -Xss4g -Xmx64g -cp "bin":"lib/*" Runner basename integer > basename.out 2>&1&
  */
 import java.text.DecimalFormat;
 public class Runner{
