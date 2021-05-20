@@ -7,6 +7,8 @@
 *temp*
 py_scripts/
 bin/
+log/
+milkyway/
 graphs/
 webgraph/
 StoreToWebGraph*
