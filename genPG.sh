@@ -4,7 +4,7 @@ pat1=.obl
 web_path=./webgraph/*$pat1
 pat2=.edgelist
 type='trivalency exponential'
-day=$(date +%F_%T)
+day=$(date +%F_%H-%M-%S)
 for graph in $web_path
 do
     name=$(basename $graph $pat1)

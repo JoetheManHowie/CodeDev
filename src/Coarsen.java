@@ -40,7 +40,7 @@ public class Coarsen{
 	
 	print("Sampling the graph "+r+" times.");
 	makeCoarse(); // after this, we have FU (the final intersection of all the sa), and its SCC
-	
+	print("intersections done");
 	H = new VWIG(pie);
 	//H.see_bag();
 	//H.print_F();
@@ -287,7 +287,7 @@ public class Coarsen{
 	private void build_w() throws Exception{
 	    // build w & W
 	    //scc.printSCC();
-	    //print(scc.num_scc);
+	    print("build w");
 	    for (int i = 0; i<nodes; i++)
 		w[scc.pie[i]]++;
 	}

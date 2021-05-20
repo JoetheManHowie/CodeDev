@@ -10,7 +10,7 @@ echo Code Successfully Compiled!
 
 graph_path=./graphs/
 log_path=./log/
-pat1=.graph
+pat1=.sorted
 
 for graph in $graph_path*$pat1
 do
