@@ -23,6 +23,7 @@ public class Runner{
 	print("Running : " +basename);
 	Coarsen C = new Coarsen(basename, number_of_world);
 	DecimalFormat dec = new DecimalFormat("#.###");
+	print("Results for "+basename);
 	print("|V| = "+ dec.format(C.nodes)+", |E| = "+ dec.format(C.edges));
 	print("|F| = " + dec.format(C.H.F_size()) + ", |F|/|E| = " + dec.format(C.getEdgeRatio()) + ", |W| = "+ dec.format(C.H.W_size()) + ", |W|/|V| = " + dec.format(C.getVertexRatio()));
 	print("Total time elapsed = "+(System.currentTimeMillis()-startTime)/1000.0 +" seconds");

@@ -1,36 +1,25 @@
 #!/bin/bash
 
-#genPG.sh <basename> <r>
-# run this srcipt from CodeDev
-graph=$1
-echo Making edgelists
-
-java -cp "bin":"lib/*" GraphToEdgelist $graph
-echo ---------------------------- Done.
-cd graphs
-
-# add date tag to file
-tri=trivalency
-exp=exponential
-#el=.edgelist
-#date_file.sh $graph\_$tri$el
-#date_file.sh $graph\_$exp$el
-
-echo Sorting ...
-
-sort -k1n -k2n $graph\_$tri.edgelist | uniq > $graph\_$tri.sorted
-sort -k1n -k2n $graph\_$exp.edgelist | uniq > $graph\_$exp.sorted
-
-echo ----------------------------- Done.
-
-echo Making edges of graph
-
-java -cp "../lib/*" it.unimi.dsi.webgraph.BVGraph -1 -g ArcListASCIIGraph dummy $graph\_$tri < $graph\_$tri.sorted
-java -cp "../lib/*" it.unimi.dsi.webgraph.BVGraph -1 -g ArcListASCIIGraph dummy $graph\_$exp < $graph\_$exp.sorted
-
-echo Adding the probabilities
-
-java -cp "../bin":"../lib/*" GenerateLabeledGraphFromTxt $graph\_$tri $graph\_$tri.sorted
-java -cp "../bin":"../lib/*" GenerateLabeledGraphFromTxt $graph\_$exp $graph\_$exp.sorted
-
-echo Done.
+pat1=.obl
+web_path=./webgraph/*$pat1
+pat2=.edgelist
+type='trivalency exponential'
+day=$(date +%F)
+for graph in $web_path
+do
+    name=$(basename $graph $pat1)
+    echo $name
+    java -cp "bin":"lib/*" GraphToEdgelist $name
+    
+done
+echo done first loop
+cd graphs/
+ls *$pat2
+for ext in $type
+do
+    for graph in ./*$ext$pat2
+    do
+	name=$(basename $graph \_$ext$pat2)
+	echo this $name
+    done
+done

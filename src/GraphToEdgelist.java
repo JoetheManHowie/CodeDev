@@ -85,8 +85,8 @@ public class GraphToEdgelist{
 	long t1 = System.currentTimeMillis();
 	String basename = args[0];
 	GraphToEdgelist edgelist = new GraphToEdgelist(basename);
-	edgelist.exponential();
 	edgelist.trivalency();
-	print("Done! "+(System.currentTimeMillis()-t1)/1000.0+" seconds");
+	edgelist.exponential();
+   	print("Done! "+(System.currentTimeMillis()-t1)/1000.0+" seconds");
     }
 }
