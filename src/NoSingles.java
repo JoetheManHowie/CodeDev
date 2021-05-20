@@ -36,6 +36,9 @@ public class NoSingles {
     long[] node_infl;
     
     String basename;
+    public static <S> void print(S s){
+	System.out.println(s);
+    }
     
     public NoSingles(String basename, double  p, double eps, int k) throws Exception {
 	long readFile = System.currentTimeMillis();
@@ -166,10 +169,7 @@ n = G.numNodes();
         int hyper_rows = G_sk.numNodes();
         long hyper_size = G_sk.numArcs();
         
-	ls
-	    System.out.println(
-			       "NoSingles Hypergraph rows = " + hyper_rows +
-			       "; hypergraph size (number of arcs) = " + hyper_size);
+	System.out.println("NoSingles Hypergraph rows = " + hyper_rows +"; hypergraph size (number of arcs) = " + hyper_size);
         System.out.println();
         
         double total_infl = 0.0;
