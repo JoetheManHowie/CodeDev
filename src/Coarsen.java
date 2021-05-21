@@ -42,9 +42,14 @@ public class Coarsen{
 	makeCoarse(); // after this, we have FU (the final intersection of all the sa), and its SCC
 	print("intersections done");
 	H = new VWIG(pie);
+
 	//H.see_bag();
 	//H.print_F();
 	//H.print_q();
+    }
+    public static void SaveAsArcLabelledGraph(){
+	// create a arcLabelledgraph of the coarsened graph with probabilities
+	// save it to graphs
     }
     public double getVertexRatio() throws Exception{
 	double ws = H.W_size();

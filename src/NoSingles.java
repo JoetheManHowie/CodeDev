@@ -42,7 +42,7 @@ public class NoSingles {
     
     public NoSingles(String basename, double  p, double eps, int k) throws Exception {
 	long readFile = System.currentTimeMillis();
-        G = ImmutableGraph.load(basename+"t"); //  Transpose graph
+        G = ImmutableGraph.load(basename); //  Transpose graph
         
         double fileTime = (System.currentTimeMillis() - readFile)/1000.0;
         

@@ -22,6 +22,7 @@ public class Runner{
 	int number_of_world = Integer.parseInt(args[1]);
 	print("Running : " +basename);
 	Coarsen C = new Coarsen(basename, number_of_world);
+	C.SaveAsArcLabelledGraph();
 	DecimalFormat dec = new DecimalFormat("#.###");
 	print("Results for "+basename);
 	print("|V| = "+ dec.format(C.nodes)+", |E| = "+ dec.format(C.edges));
