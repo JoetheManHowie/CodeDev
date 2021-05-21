@@ -46,19 +46,19 @@ public class NoSingles {
         
         double fileTime = (System.currentTimeMillis() - readFile)/1000.0;
         
-        System.out.println();
-        System.out.println("Reading transpose graph took " + fileTime + " seconds");
+        print("");
+        print("Reading transpose graph took " + fileTime + " seconds");
 	
 n = G.numNodes();
 	m = G.numArcs();
         
         c = 4.0 *(1 + eps)*(1 + 1/k); //constant for Borgs et al. formula
         
-        System.out.println("n="+n + ", m=" +m  + ", R=" + ( c * m * k * (1/Math.pow(eps, 2)) * Math.log(n) ) );
+        print("n="+n + ", m=" +m  + ", R=" + ( c * m * k * (1/Math.pow(eps, 2)) * Math.log(n) ) );
         
-        System.out.println("k = " + k);
-        System.out.println("p = " + p);
-        System.out.println("eps = " + eps);
+        print("k = " + k);
+        print("p = " + p);
+        print("eps = " + eps);
 	
 	
         this.p = p;
@@ -74,7 +74,7 @@ n = G.numNodes();
         long getHypergraph = System.currentTimeMillis();
         
         int cores = Runtime.getRuntime().availableProcessors();
-        System.out.println("int cores = " + cores);
+        print("int cores = " + cores);
         
         double R = ( c * m * k * (1/Math.pow(eps, 2)) * Math.log(n) )/cores;
         
@@ -117,7 +117,7 @@ n = G.numNodes();
                 int[] sketch_vertex_list = h.successorArray(i);
                 g.add(sketch_vertex_list, 0, h.outdegree(i));
             }
-	    //            System.out.println("Core = " + core + "; Number of sketches saved = " + h.numNodes() );
+	    //            print("Core = " + core + "; Number of sketches saved = " + h.numNodes() );
 	    
         }
         
@@ -127,9 +127,9 @@ n = G.numNodes();
         
         double gTime = (System.currentTimeMillis() - getHypergraph)/1000.0;
         
-        System.out.println();
-        System.out.println("Creating NoSingles hypergraph took " + gTime + " seconds");
-        System.out.println();
+        print("");
+        print("Creating NoSingles hypergraph took " + gTime + " seconds");
+        print("");
         
         
         System.gc();
@@ -143,10 +143,10 @@ n = G.numNodes();
         sketch_num = 0;
         for(int ii = 0; ii<cores;ii++) {
             sketch_num = sketch_num + node_infl[ii][0];
-	    //            System.out.println("Number of sketches taken by core" + ii + " = " + node_infl[ii][0] );
+	    //            print("Number of sketches taken by core" + ii + " = " + node_infl[ii][0] );
         }
         
-        System.out.println("Total number of sketches = " + sketch_num );
+        print("Total number of sketches = " + sketch_num );
         
         double coeff = 1.0 * n/sketch_num;
         
@@ -160,7 +160,7 @@ n = G.numNodes();
         node_cover[n] = sketch_num;
         node_cover[n+1] = n;
         
-	//        System.out.println("Writing nodes influence into a binary file...");
+	//        print("Writing nodes influence into a binary file...");
         writeLongArrayToBinaryFile(node_cover, G.basename()+"-sketches.cover");
         
         
@@ -169,8 +169,8 @@ n = G.numNodes();
         int hyper_rows = G_sk.numNodes();
         long hyper_size = G_sk.numArcs();
         
-	System.out.println("NoSingles Hypergraph rows = " + hyper_rows +"; hypergraph size (number of arcs) = " + hyper_size);
-        System.out.println();
+	print("NoSingles Hypergraph rows = " + hyper_rows +"; hypergraph size (number of arcs) = " + hyper_size);
+        print("");
         
         double total_infl = 0.0;
         BitSet sk_gone = new BitSet(hyper_rows);
@@ -181,8 +181,8 @@ n = G.numNodes();
         
         double getSeeds = (System.currentTimeMillis() - startSeeds)/1000.0;
         
-        System.out.println();
-        System.out.println("Calculating seeds took " + getSeeds + " seconds");
+        print("");
+        print("Calculating seeds took " + getSeeds + " seconds");
         
     }
     
@@ -211,7 +211,7 @@ n = G.numNodes();
         
         while(weight_of_current_index < R) {
 	    
-            int v = gen_rnd.nextInt(n);
+            int v = gen_rnd.nextInt(n); // RANDOM EDGE
             marked.clear();
             BFS(G.copy(),v,marked);
             
@@ -266,7 +266,7 @@ n = G.numNodes();
                 int uu = u_neighbors[ni];
                 double xi = random.nextDouble();
                 
-                if (!marked.get(uu) && xi < p) {
+                if (!marked.get(uu) && xi < p) { // strickly less?
                     queue.add(uu);
                     marked.set(uu);
                 }
@@ -302,17 +302,17 @@ n = G.numNodes();
 	    }
 	}
 	    
-        //        System.out.println("Maximum Influence = " + infl_max);
+        //        print("Maximum Influence = " + infl_max);
         
         total_infl =  total_infl + infl_max * coeff;
         
-        System.out.println(max_node);
+        print(max_node);
         
         
         // Stopping condition: no need to re-calculate the influence, if we already got the k seeds
         if((k_left - 1)==0){
-	    System.out.println();
-	    System.out.println( "Set Influence = " + total_infl );
+	    print("");
+	    print( "Set Influence = " + total_infl );
 	    return;
 	}
         
@@ -342,7 +342,7 @@ n = G.numNodes();
             }
         }
         //        }
-        //        System.out.println("Sketches with max_node found:" + jj + "; when max_node is " + max_node + " with infl_max = " + infl_max);
+        //        print("Sketches with max_node found:" + jj + "; when max_node is " + max_node + " with infl_max = " + infl_max);
         
         node_infl[max_node] = 0;
         get_seeds(G_sk.copy(), node_infl, k_left-1, hyper_rows, total_infl, sk_gone, coeff);
@@ -357,7 +357,7 @@ n = G.numNodes();
 	
         
         if(args.length < 4) {
-            System.out.println("Specify: basename, p, eps, k");
+            print("Specify: basename, p, eps, k");
             System.exit(1);
         }
         
@@ -372,9 +372,9 @@ n = G.numNodes();
         System.gc();
         
         double appr = 1 - 1/Math.E - eps;
-        System.out.println("Approximation to OPT = " + appr + " with the probability of at least 60%");
+        print("Approximation to OPT = " + appr + " with the probability of at least 60%");
 	
 	estimatedTime = System.currentTimeMillis() - startTime;
-	System.out.println("Total time elapsed = " + estimatedTime / 1000.0 + " seconds");
+	print("Total time elapsed = " + estimatedTime / 1000.0 + " seconds");
     }
 }
