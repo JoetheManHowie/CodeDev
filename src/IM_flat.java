@@ -134,7 +134,7 @@ public class IM_flat {
         count_sketches = 0;
         Random gen_rnd = new Random();
 	while(weight_of_current_index < R){
-	    int v = gen_rnd.nextInt(c_n);
+	    int v = gen_rnd.nextInt(c_n-1);
 	    marked.clear();
 	    BFS(v,marked);
 	    int total_out_degree = 0;
