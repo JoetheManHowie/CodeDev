@@ -47,7 +47,11 @@ public class Coarsen{
 	//H.print_F();
 	//H.print_q();
     }
-    public static void SaveAsArcLabelledGraph(){
+    public int getOutDegree(Integer u){
+	return H.F.get(u).size();
+    }
+    public void SaveAsArcLabelledGraph(){
+	// -- not needed now
 	// create a arcLabelledgraph of the coarsened graph with probabilities
 	// save it to graphs
     }
