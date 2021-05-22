@@ -81,7 +81,11 @@ public class IM_flat {
 	    where_the_infl[i] = C.pie.pie[infl[i]];
 	    print("Influencer "+infl[i]+" is in cluster "+where_the_infl[i]);
 	}
-	
+	for (int i = 0; i < where_the_infl.length; i++)
+	    for (int j = 0; j < coarse_infl.length; j++)
+		if(where_the_infl[i]==coarse_infl[j])
+		    print("Number " +i+ " influencer "+infl[i]+" lives in cluster "+coarse_infl[j]+", the number "+j+" cluster influencer");
+			
     }
     /**
      */
