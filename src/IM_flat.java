@@ -184,18 +184,11 @@ public class IM_flat {
 	while (!queue.isEmpty()) {
             int u = queue.remove();
 	    HashSet<Integer> u_neighbours = C.H.F.get(Integer.valueOf(u));
-	    //int[] u_neighbors = C.PG.successorArray(u);
-	    
-	    //Label [] label = C.PG.labelArray(u);
-            //int u_deg = C.PG.outdegree(u);
-	    //for (int ni = 0; ni < u_deg; ni++) {
 	    for(Integer uu: u_neighbours){
-		//int uu = u_neighbors[ni];
-		//int weight = (int)label[ni].getLong();
 		Pair getme = new Pair(u, uu);
-		Integer weight = C.H.q.get(getme);
-                double xi = random.nextDouble();
-		if (!marked.get(uu) && xi < weight) {
+		int weight = C.H.q.get(getme);
+                int xi = random.nextInt(1000);
+		if (!marked.get(uu) && xi <= weight) {
                     queue.add(uu);
                     marked.set(uu);
                 }
