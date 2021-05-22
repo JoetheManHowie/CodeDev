@@ -21,7 +21,7 @@ public class IM_flat {
     Coarsen C;
     int n, k;
     long m;
-    String basename;
+    //String basename;
     double  beta;
     int nMAX = 175000000; // maximum possible for 16 GB main memory --- divided by 8 to make 2GB
     BitSet marked, sk_gone, nodes_gone;
@@ -29,6 +29,8 @@ public class IM_flat {
     int[] nodes;
     int[] node_infl;
     int[] coarse_node_infl;
+    int[] coarse_infl;
+    int[] infl;
     int count_sketches; // the length of sketches and nodes arrays
     /**
      */
@@ -42,13 +44,15 @@ public class IM_flat {
 	//this.G = ArcLabelledImmutableGraph.load("graphs/"+basename+".w");
 	this.n = C.nodes;
 	this.m = C.edges;
-        this.basename = basename;
+        //this.basename = basename;
         this.beta = beta;
         this.k = k;
         print("beta = " + beta);
         print("k = " + k);
 	marked = new BitSet(n);
 	node_infl = new int[n];
+	infl = new int[k];
+	coarse_infl = new int[k];
 	set_node_sketch();
 	print("Running influence maximization on original graph");
     	get_sketch();
@@ -103,7 +107,7 @@ public class IM_flat {
         double coeff = 1.0 * n/sketch_num;
         sk_gone = new BitSet(sketch_num);
         nodes_gone = new BitSet(count_sketches);
-        get_seeds(sketches, nodes, node_infl, k, count_sketches, sketch_num, set_infl, coeff, sk_gone, nodes_gone, n);
+        get_seeds(sketches, nodes, node_infl, k, count_sketches, sketch_num, set_infl, coeff, sk_gone, nodes_gone, n, infl);
 	double getSeeds = (System.currentTimeMillis() - startSeeds)/1000.0;
 	print("");
         print("Calculating seeds took " + getSeeds + " seconds");
@@ -123,8 +127,8 @@ public class IM_flat {
 	    for (int ni = 0; ni < u_deg; ni++) {
                 int uu = u_neighbors[ni];
 		int weight = (int)label[ni].getLong();
-                double xi = random.nextDouble();
-		if (!marked.get(uu) && xi < weight) {
+                int xi = random.nextInt(1000);
+		if (!marked.get(uu) && xi <= weight) {
                     queue.add(uu);
                     marked.set(uu);
                 }
@@ -169,7 +173,7 @@ public class IM_flat {
         double coeff = 1.0 * c_n/sketch_num;
         sk_gone = new BitSet(sketch_num);
         nodes_gone = new BitSet(count_sketches);
-        get_seeds(sketches, nodes, coarse_node_infl, k, count_sketches, sketch_num, set_infl, coeff, sk_gone, nodes_gone, c_n);
+        get_seeds(sketches, nodes, coarse_node_infl, k, count_sketches, sketch_num, set_infl, coeff, sk_gone, nodes_gone, c_n, coarse_infl);
 	double getSeeds = (System.currentTimeMillis() - startSeeds)/1000.0;
 	print("");
         print("Calculating seeds took " + getSeeds + " seconds");
@@ -207,7 +211,8 @@ public class IM_flat {
 			   double coeff,
 			   BitSet sk_gone,
 			   BitSet nodes_gone,
-			   int num_nodes) {
+			   int num_nodes,
+			   int [] tops) {
 	// Calculating the node with max influence
         int infl_max = 0;
         int max_node = 0;
@@ -217,6 +222,7 @@ public class IM_flat {
 		max_node = v;
 	    }
         }
+	tops[k-k_left] = infl_max;
 	set_infl = set_infl + infl_max * coeff;
 	print(max_node +", Its Influence = " + infl_max);
 	// Stopping condition: no need to re-calculate the influence, if we already got the k seeds
@@ -257,7 +263,7 @@ public class IM_flat {
             }
         }
 	nodes_gone.set(max_node);
-	get_seeds(iSketch, iNode, node_infl, k_left-1, count_sketches, sketch_num, set_infl, coeff, sk_gone, nodes_gone, num_nodes);
+	get_seeds(iSketch, iNode, node_infl, k_left-1, count_sketches, sketch_num, set_infl, coeff, sk_gone, nodes_gone, num_nodes, tops);
     }    
     /**
      */
