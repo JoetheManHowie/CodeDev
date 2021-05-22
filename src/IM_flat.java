@@ -14,6 +14,7 @@ import it.unimi.dsi.webgraph.labelling.Label;
 
 public class IM_flat {
     ArcLabelledImmutableGraph G;
+    Coarsen C;
     int n, k;
     long m;
     String basename;
@@ -28,98 +29,95 @@ public class IM_flat {
     int[] sketches;
     int[] nodes;
     int[] node_infl;
-
+    
     int count_sketches; // the length of sketches and nodes arrays
+    
+    public IM_flat(String basename,  Double beta, int k) throws Exception {
+	G = ArcLabelledImmutableGraph.load(basename+".w");
 	
-	public IM_flat(String basename,  Double beta, int k) throws Exception {
-		G = ArcLabelledImmutableGraph.load(basename+".w");
-		
-		n = G.numNodes();
-		m = G.numArcs();
-
+	n = G.numNodes();
+	m = G.numArcs();
+	
         System.out.println("beta = " + beta);
         System.out.println("k = " + k);
-
+	
         System.out.println("n="+n + ", m=" +m  + ", R=" +( beta * k * m*Math.log(n)  ));
-		
-		marked = new BitSet(n);
+	
+	marked = new BitSet(n);
         
         sketches = new int[nMAX];
         nodes = new int[nMAX];
         node_infl = new int[n];
         
-        for(int i=0;i<nMAX;i++)
-        {
-            sketches[i] = -1;
-            nodes[i] = -1;
+        for(int i=0;i<nMAX;i++){
+	    sketches[i] = -1;
+	    nodes[i] = -1;
         }
         
         this.basename = basename;
 	//this.p = p;
         this.beta = beta;
         this.k = k;
-	}
+    }
     
+    
+    void get_sketch() {
 	
-	void get_sketch() {
-
         double R = beta * k * m * Math.log(n);
-                           
-	    double weight_of_current_index = 0.0;
-//	    int index = 0;
+        
+	double weight_of_current_index = 0.0;
+	//	    int index = 0;
         int sketch_num = 0;
-
-	    long startTime = System.currentTimeMillis();
+	
+	long startTime = System.currentTimeMillis();
         count_sketches = 0;
         Random gen_rnd = new Random();
-
-	    while(weight_of_current_index < R)
-	    {
-/*	    	if(index % 1000000 == 0) {
-	    		System.out.println(
+	
+	while(weight_of_current_index < R){
+	    /*	    	if(index % 1000000 == 0) {
+			System.out.println(
                         "sketch=" + sketch_num + 
-	    				",  index=" + index +
+			",  index=" + index +
                         ", weight_of_current_index=" + weight_of_current_index);
-	    	}
-*/
-	    	int v = gen_rnd.nextInt(n);
-	        marked.clear();
-	        BFS(v,marked);
-
-	        int total_out_degree = 0;
+			}
+	    */
+	    int v = gen_rnd.nextInt(n);
+	    marked.clear();
+	    BFS(v,marked);
+	    
+	    int total_out_degree = 0;
             int iteration = 0;
-	        for (int u = marked.nextSetBit(0); u >= 0; u = marked.nextSetBit(u+1))
-	        {
-                sketches[count_sketches + iteration] = sketch_num;
+	    for (int u = marked.nextSetBit(0); u >= 0; u = marked.nextSetBit(u+1)){
+		sketches[count_sketches + iteration] = sketch_num;
                 nodes[count_sketches + iteration]  = u;
                 node_infl[u] = node_infl[u] + 1;
                 iteration = iteration + 1;
-	            total_out_degree = total_out_degree + G.outdegree(u);
-	        }
-
-	        weight_of_current_index = weight_of_current_index + total_out_degree;
-//	        index = ( index + 1 ) % n;
+		total_out_degree = total_out_degree + G.outdegree(u);
+	    }
+	    
+	    weight_of_current_index = weight_of_current_index + total_out_degree;
+	    //	        index = ( index + 1 ) % n;
             sketch_num = sketch_num + 1;
             count_sketches = count_sketches + marked.cardinality();
-	    }
+	}
         
         System.out.println();
-	    System.out.println("Number of Sketches: " + sketch_num);
-//                           ", Size of array iSketch: " + count_sketches);
+	System.out.println("Number of Sketches: " + sketch_num);
+	//                           ", Size of array iSketch: " + count_sketches);
         System.out.println();
         
         // Cutting off the tails of sketches and nodes arrays, making the arrays shorter
-//        int[] iSketch = new int[count_sketches + 1];
-//        System.arraycopy(sketches,0,iSketch,0,count_sketches);
-//        System.gc();
-
+	//        int[] iSketch = new int[count_sketches + 1];
+	//        System.arraycopy(sketches,0,iSketch,0,count_sketches);
+	//        System.gc();
+	
         
-//        int[] iNode = new int[count_sketches + 1];
-//        System.arraycopy(nodes,0,iNode,0,count_sketches);
-
-/*        System.out.println("First sketch numbers in iSketch = " + iSketch[0] + "; " + iSketch[1] + "; " + iSketch[2] + "; " + iSketch[3] + ".");
-        System.out.println("First nodes in iNode = " + iNode[0] + "; " + iNode[1] + "; " + iNode[2]+ "; " + iNode[3] + ".");
-*/
+	//        int[] iNode = new int[count_sketches + 1];
+	//        System.arraycopy(nodes,0,iNode,0,count_sketches);
+	
+	/*        System.out.println("First sketch numbers in iSketch = " + iSketch[0] + "; " + iSketch[1] + "; " + iSketch[2] + "; " + iSketch[3] + ".");
+		  System.out.println("First nodes in iNode = " + iNode[0] + "; " + iNode[1] + "; " + iNode[2]+ "; " + iNode[3] + ".");
+	*/
         System.gc();
         
         long startSeeds = System.currentTimeMillis();
@@ -128,30 +126,30 @@ public class IM_flat {
         double coeff = 1.0 * n/sketch_num;
         sk_gone = new BitSet(sketch_num);
         nodes_gone = new BitSet(count_sketches);
-
+	
         get_seeds(sketches, nodes, node_infl, k, count_sketches, sketch_num, set_infl, coeff, sk_gone, nodes_gone);
         
         double getSeeds = (System.currentTimeMillis() - startSeeds)/1000.0;
         
         System.out.println();
         System.out.println("Calculating seeds took " + getSeeds + " seconds");
-	}
-		
-	void BFS(int v, BitSet marked) {
-		
-		Random random = new Random();
-		
-		Deque<Integer> queue = new ArrayDeque<Integer>();
-
-		queue.add(v);
+    }
+    
+    void BFS(int v, BitSet marked) {
+	
+	Random random = new Random();
+	
+	Deque<Integer> queue = new ArrayDeque<Integer>();
+	
+	queue.add(v);
         marked.set(v);
-                
+        
         while (!queue.isEmpty()) {
             int u = queue.remove();
             int[] u_neighbors = G.successorArray(u);
 	    Label [] label = G.labelArray(u);
             int u_deg = G.outdegree(u);
-        
+	    
             for (int ni = 0; ni < u_deg; ni++) {
                 int uu = u_neighbors[ni];
 		int weight = (int)label[ni].getLong();
@@ -163,27 +161,24 @@ public class IM_flat {
                 }
             }
         }
-	}
+    }
     
     void get_seeds(int[] iSketch,int[] iNode, int[] node_infl, int k_left, int count_sketches, int sketch_num, double set_infl, double coeff, BitSet sk_gone, BitSet nodes_gone) {
-
+	
         // Calculating the node with max influence
         int infl_max = 0;
         int max_node = 0;
         
-        for(int v=0;v<n;v++)
-        {
-               if(node_infl[v] > infl_max)
-                {
-                    infl_max = node_infl[v];
-                    max_node = v;
-                }
+        for(int v=0;v<n;v++){
+	    if(node_infl[v] > infl_max){
+		infl_max = node_infl[v];
+		max_node = v;
+	    }
         }
         
         set_infl = set_infl + infl_max * coeff;
-
-        System.out.println(max_node +
-                           ", Its Influence = " + infl_max);
+	
+        System.out.println(max_node +", Its Influence = " + infl_max);
         
         
         // Stopping condition: no need to re-calculate the influence, if we already got the k seeds
@@ -195,25 +190,20 @@ public class IM_flat {
         // Re-calculating the influence of the remaining nodes: remove max node and the sketches it participated in
         // plus re-calculate the influence
         node_infl[max_node] = 0;
-
-        for(int j=0;j<count_sketches;j++)
-        {
-            if(nodes_gone.get(j))
-                continue;
+	
+        for(int j=0;j<count_sketches;j++){
+	    if(nodes_gone.get(j))
+		continue;
             
-            else
-            {
-                if((iNode[j] == max_node) && (!sk_gone.get(iSketch[j])))
-                {
-                    int redundant_sketch = sketches[j];
+            else{
+                if((iNode[j] == max_node) && (!sk_gone.get(iSketch[j]))){
+		    int redundant_sketch = sketches[j];
                     sk_gone.set(redundant_sketch);
-
-                // As sketches are added to the array in numerical order, the same redundant sketch can be found before and after the max node
-                    if(j < (count_sketches - 1))
-                    {
+		    
+		    // As sketches are added to the array in numerical order, the same redundant sketch can be found before and after the max node
+                    if(j < (count_sketches - 1)){
                         int l = j+1;
-                        while((l<count_sketches) && (iSketch[l] == redundant_sketch))
-                        {
+                        while((l<count_sketches) && (iSketch[l] == redundant_sketch)){
                             if(node_infl[iNode[l]] > 0)
                                 node_infl[iNode[l]] = node_infl[iNode[l]] - 1;
                             
@@ -221,13 +211,11 @@ public class IM_flat {
                             l++;
                         }
                     }
-            
-                    if(j>0)
-                    {
-                        int ll = j-1;
+		    
+                    if(j>0){
+			int ll = j-1;
                         
-                        while(((ll+1) > 0) && (iSketch[ll] == redundant_sketch))
-                        {
+                        while(((ll+1) > 0) && (iSketch[ll] == redundant_sketch)){
                             if(node_infl[iNode[ll]] > 0)
                                 node_infl[iNode[ll]] = node_infl[iNode[ll]] - 1;
                             
@@ -238,16 +226,16 @@ public class IM_flat {
                 }
             }
         }
-            
-            nodes_gone.set(max_node);
-            get_seeds(iSketch, iNode, node_infl, k_left-1, count_sketches, sketch_num, set_infl, coeff, sk_gone, nodes_gone);
+	
+	nodes_gone.set(max_node);
+	get_seeds(iSketch, iNode, node_infl, k_left-1, count_sketches, sketch_num, set_infl, coeff, sk_gone, nodes_gone);
     }
-
-		
-	public static void main(String[] args) throws Exception {
-		long startTime = System.currentTimeMillis();
-		long estimatedTime;
-
+    
+    
+    public static void main(String[] args) throws Exception {
+	long startTime = System.currentTimeMillis();
+	long estimatedTime;
+	
         if(args.length < 3) {
             System.out.println("Specify: basename, beta, k");
             System.exit(1);
@@ -259,17 +247,17 @@ public class IM_flat {
         int k = Integer.valueOf(args[2]);
 	for (int i = 0; i<args.length;i++)
 	    System.out.println(args[i]);
-		//args = new String[] {"cnr-nlt", "0.1"};
+	//args = new String[] {"cnr-nlt", "0.1"};
         //args = new String[] {"uk100-nlt", "0.1"};
         //args = new String[] {"eu-nlt", "0.1"};
-
-		//String basename  = args[0];
-		//double p = Double.valueOf(args[1]);
-		
+	
+	//String basename  = args[0];
+	//double p = Double.valueOf(args[1]);
+	
         IM_flat imfl = new IM_flat(basename, beta, k);
-		imfl.get_sketch();
-			
-		estimatedTime = System.currentTimeMillis() - startTime;
-		System.out.println("Time elapsed = " + estimatedTime /(1000.0) + " sec");
-	}
+	imfl.get_sketch();
+	
+	estimatedTime = System.currentTimeMillis() - startTime;
+	System.out.println("Time elapsed = " + estimatedTime /(1000.0) + " sec");
+    }
 }
