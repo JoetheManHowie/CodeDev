@@ -32,8 +32,11 @@ public class IM_flat {
     
     int count_sketches; // the length of sketches and nodes arrays
     
+    public static <S> void print(S s){
+	System.out.println(s);
+    }
     public IM_flat(String basename,  Double beta, int k) throws Exception {
-	G = ArcLabelledImmutableGraph.load(basename+".w");
+	G = ArcLabelledImmutableGraph.load("graphs/"+basename+".w");
 	
 	n = G.numNodes();
 	m = G.numArcs();
@@ -61,7 +64,7 @@ public class IM_flat {
     }
     
     
-    void get_sketch() {
+    private void get_sketch() {
 	
         double R = beta * k * m * Math.log(n);
         
@@ -135,7 +138,7 @@ public class IM_flat {
         System.out.println("Calculating seeds took " + getSeeds + " seconds");
     }
     
-    void BFS(int v, BitSet marked) {
+    private void BFS(int v, BitSet marked) {
 	
 	Random random = new Random();
 	
@@ -163,7 +166,7 @@ public class IM_flat {
         }
     }
     
-    void get_seeds(int[] iSketch,int[] iNode, int[] node_infl, int k_left, int count_sketches, int sketch_num, double set_infl, double coeff, BitSet sk_gone, BitSet nodes_gone) {
+    private void get_seeds(int[] iSketch,int[] iNode, int[] node_infl, int k_left, int count_sketches, int sketch_num, double set_infl, double coeff, BitSet sk_gone, BitSet nodes_gone) {
 	
         // Calculating the node with max influence
         int infl_max = 0;
