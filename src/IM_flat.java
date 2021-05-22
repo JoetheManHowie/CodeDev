@@ -7,6 +7,7 @@
  *
  */
 import java.util.ArrayDeque;
+import java.util.HashSet;
 import java.util.BitSet;
 import java.util.Deque;
 import java.util.Random;
@@ -145,7 +146,7 @@ public class IM_flat {
 	while(weight_of_current_index < R){
 	    int v = gen_rnd.nextInt(c_n-1);
 	    marked.clear();
-	    BFS(v,marked);
+	    coarse_BFS(v,marked);
 	    int total_out_degree = 0;
             int iteration = 0;
 	    for (int u = marked.nextSetBit(0); u >= 0; u = marked.nextSetBit(u+1)){
@@ -179,15 +180,20 @@ public class IM_flat {
 	Random random = new Random();
 	Deque<Integer> queue = new ArrayDeque<Integer>();
 	queue.add(v);
-        marked.set(v);
+        marked.set(v);	
 	while (!queue.isEmpty()) {
             int u = queue.remove();
-            int[] u_neighbors = C.PG.successorArray(u);
-	    Label [] label = C.PG.labelArray(u);
-            int u_deg = C.PG.outdegree(u);
-	    for (int ni = 0; ni < u_deg; ni++) {
-                int uu = u_neighbors[ni];
-		int weight = (int)label[ni].getLong();
+	    HashSet<Integer> u_neighbours = C.H.F.get(Integer.valueOf(u));
+	    //int[] u_neighbors = C.PG.successorArray(u);
+	    
+	    //Label [] label = C.PG.labelArray(u);
+            //int u_deg = C.PG.outdegree(u);
+	    //for (int ni = 0; ni < u_deg; ni++) {
+	    for(Integer uu: u_neighbours){
+		//int uu = u_neighbors[ni];
+		//int weight = (int)label[ni].getLong();
+		Pair getme = new Pair(u, uu);
+		Integer weight = C.H.q.get(getme);
                 double xi = random.nextDouble();
 		if (!marked.get(uu) && xi < weight) {
                     queue.add(uu);
@@ -212,7 +218,7 @@ public class IM_flat {
 	// Calculating the node with max influence
         int infl_max = 0;
         int max_node = 0;
-	for(int v=0;v<num_nodes;v++){
+	for (int v = 0; v<num_nodes;v++){
 	    if(node_infl[v] > infl_max){
 		infl_max = node_infl[v];
 		max_node = v;

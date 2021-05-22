@@ -258,6 +258,7 @@ public class Coarsen{
     /**
      * for hash keys, I dislike the Integer class, but here we are..you may get a deprecated warning its fine.
      */
+    /*
     public class Pair{
 	private Integer i;
 	private Integer j;
@@ -275,6 +276,7 @@ public class Coarsen{
 	    return (obj instanceof Pair ) && ((Pair) obj).i.equals(i) && ((Pair) obj).j.equals(j);
 	}
     }
+    */
     public class VWIG {
 	SCC scc;
 	HashMap<Integer, HashSet<Integer>> bag;
