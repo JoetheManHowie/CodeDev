@@ -40,7 +40,9 @@ public class IM_flat {
     /**
      */
     public IM_flat(String basename, Double beta, int k, int r) throws Exception {
+	long time = System.currentTimeMillis();
 	this.C = new Coarsen(basename, r);
+	print("Time to coarsen graph "+(System.currentTimeMillis()-time)/1000.0+ " seconds");
 	//this.G = ArcLabelledImmutableGraph.load("graphs/"+basename+".w");
 	this.n = C.nodes;
 	this.m = C.edges;
@@ -49,6 +51,7 @@ public class IM_flat {
         this.k = k;
         print("beta = " + beta);
         print("k = " + k);
+	time = System.currentTimeMillis();
 	marked = new BitSet(n);
 	node_infl = new int[n];
 	infl = new int[k];
@@ -56,11 +59,29 @@ public class IM_flat {
 	set_node_sketch();
 	print("Running influence maximization on original graph");
     	get_sketch();
+	print("Time to IM on original graph "+(System.currentTimeMillis()-time)/1000.0+ " seconds");
+	time = System.currentTimeMillis();
 	set_node_sketch();
 	coarse_node_infl = new int[C.H.W_size()];
 	marked = new BitSet(C.H.W_size());
 	print("Running influence maximization on coarsened graph");
 	coarse_sketch();
+	print("Time to IM on original graph "+(System.currentTimeMillis()-time)/1000.0+ " seconds");
+	compare_og_to_coarse();
+    }
+    /**
+     * 
+     */
+    public void compare_og_to_coarse(){
+	// holds the label of the coarsened node
+	// for the node which has the same index
+	// in infl array ie the node infl[i] is in where_the_infl[i]
+	int [] where_the_infl = new int[k]; 
+	for (int i = 0; i < infl.length; i++){
+	    where_the_infl[i] = C.pie.pie[infl[i]];
+	    print("Influencer "+infl[i]+" is in cluster "+where_the_infl[i]);
+	}
+	
     }
     /**
      */
@@ -222,7 +243,7 @@ public class IM_flat {
 		max_node = v;
 	    }
         }
-	tops[k-k_left] = infl_max;
+	tops[k-k_left] = max_node;
 	set_infl = set_infl + infl_max * coeff;
 	print(max_node +", Its Influence = " + infl_max);
 	// Stopping condition: no need to re-calculate the influence, if we already got the k seeds
