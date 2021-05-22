@@ -17,7 +17,6 @@ import it.unimi.dsi.webgraph.labelling.ArcLabelledImmutableGraph;
 import it.unimi.dsi.webgraph.labelling.Label;
 
 public class IM_flat {
-    //ArcLabelledImmutableGraph G;
     Coarsen C;
     int n, k;
     long m;
@@ -28,6 +27,7 @@ public class IM_flat {
     int[] sketches;
     int[] nodes;
     int[] node_infl;
+    int[] coarse_node_infl;
     int count_sketches; // the length of sketches and nodes arrays
     /**
      */
@@ -46,23 +46,31 @@ public class IM_flat {
         this.k = k;
         print("beta = " + beta);
         print("k = " + k);
-        print("n="+n + ", m=" +m  + ", R=" +( beta * k * m*Math.log(n)  ));
 	marked = new BitSet(n);
-        sketches = new int[nMAX];
-        nodes = new int[nMAX];
-        node_infl = new int[n];
-        for(int i=0;i<nMAX;i++){
-	    sketches[i] = -1;
-	    nodes[i] = -1;
-        }
+	node_infl = new int[n];
+	set_node_sketch();
+	print("Running influence maximization on original graph");
     	get_sketch();
+	set_node_sketch();
+	coarse_node_infl = new int[C.H.W_size()];
+	marked = new BitSet(C.H.W_size());
+	print("Running influence maximization on coarsened graph");
 	coarse_sketch();
     }
     /**
      */
-    
+    private void set_node_sketch(){
+	sketches = new int[nMAX];
+        nodes = new int[nMAX];
+        
+        for (int i = 0; i<nMAX; i++){
+	    sketches[i] = -1;
+	    nodes[i] = -1;
+        }
+    }
     private void get_sketch() {
 	double R = beta * k * m * Math.log(n);
+	print(R);
 	double weight_of_current_index = 0.0;
         int sketch_num = 0;
 	long startTime = System.currentTimeMillis();
@@ -128,7 +136,8 @@ public class IM_flat {
 	int c_n = C.H.W_size();
 	int c_m = C.H.F_size();
 	double R = beta * k * c_m * Math.log(c_n);
-	double weight_of_current_index = 0.0;
+	print("R = "+R);
+	Double weight_of_current_index = 0.0;
         int sketch_num = 0;
 	long startTime = System.currentTimeMillis();
         count_sketches = 0;
@@ -142,7 +151,7 @@ public class IM_flat {
 	    for (int u = marked.nextSetBit(0); u >= 0; u = marked.nextSetBit(u+1)){
 		sketches[count_sketches + iteration] = sketch_num;
                 nodes[count_sketches + iteration]  = u;
-                node_infl[u] = node_infl[u] + 1;
+                coarse_node_infl[u] = coarse_node_infl[u] + 1;
                 iteration = iteration + 1;
 		total_out_degree = total_out_degree + C.getOutDegree(u);
 	    }
@@ -159,7 +168,7 @@ public class IM_flat {
         double coeff = 1.0 * c_n/sketch_num;
         sk_gone = new BitSet(sketch_num);
         nodes_gone = new BitSet(count_sketches);
-        get_seeds(sketches, nodes, node_infl, k, count_sketches, sketch_num, set_infl, coeff, sk_gone, nodes_gone, c_n);
+        get_seeds(sketches, nodes, coarse_node_infl, k, count_sketches, sketch_num, set_infl, coeff, sk_gone, nodes_gone, c_n);
 	double getSeeds = (System.currentTimeMillis() - startSeeds)/1000.0;
 	print("");
         print("Calculating seeds took " + getSeeds + " seconds");
