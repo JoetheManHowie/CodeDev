@@ -3,9 +3,9 @@ import java.util.*;
 public class Pair{
     public final Integer i;
     public final Integer j;
-    public Pair(int i, int j){
-	this.i = new Integer(Integer.valueOf(i));
-	this.j = new Integer(Integer.valueOf(j));
+    public Pair(Integer i, Integer j){
+	this.i = Integer.valueOf(i);
+	this.j = Integer.valueOf(j);
     }
     // src: https://bit.ly/3eK1P1B
     @Override
