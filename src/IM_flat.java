@@ -23,7 +23,7 @@ public class IM_flat {
     long m;
     //String basename;
     double  beta;
-    int nMAX = 175000000 * 64; // maximum possible for 16 GB main memory --- divided by 8 to make 2GB
+    int nMAX = 175000000 * 8; // maximum possible for 16 GB main memory --- divided by 8 to make 2GB
     BitSet marked, sk_gone, nodes_gone;
     int[] sketches;
     int[] nodes;
