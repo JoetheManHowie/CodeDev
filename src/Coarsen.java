@@ -37,8 +37,6 @@ public class Coarsen{
 	this.PG = ArcLabelledImmutableGraph.load("graphs/"+basename+".w");
 	this.edges = (int)PG.numArcs();
 	this.nodes = PG.numNodes();
-	
-	print("Sampling the graph "+r+" times.");
 	makeCoarse(); // after this, we have FU (the final intersection of all the sa), and its SCC
 	//print("intersections done");
 	H = new VWIG(pie);

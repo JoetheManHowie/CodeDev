@@ -42,6 +42,7 @@ public class IM_flat {
     public IM_flat(String basename, Double beta, int k, int r) throws Exception {
 	long time = System.currentTimeMillis();
 	this.C = new Coarsen(basename, r);
+	print("Sampling the graph "+r+" times.");
 	print("Time to coarsen graph "+(System.currentTimeMillis()-time)/1000.0+ " seconds");
 	//this.G = ArcLabelledImmutableGraph.load("graphs/"+basename+".w");
 	this.n = C.nodes;
