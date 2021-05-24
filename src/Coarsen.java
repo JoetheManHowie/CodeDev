@@ -48,7 +48,11 @@ public class Coarsen{
 	//H.print_q();
     }
     public int getOutDegree(Integer u){
-	return H.F.get(u).size();
+	HashSet set = H.F.get(u);
+	if (set == null)
+	    return 0;
+	else
+	    return set.size();
     }
     public void SaveAsArcLabelledGraph(){
 	// -- not needed now
