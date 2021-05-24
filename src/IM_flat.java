@@ -59,14 +59,14 @@ public class IM_flat {
 	set_node_sketch();
 	print("Running influence maximization on original graph");
     	get_sketch();
-	print("Time to IM on original graph "+(System.currentTimeMillis()-time)/1000.0+ " seconds");
+	print("Time to run IM on original graph "+(System.currentTimeMillis()-time)/1000.0+ " seconds\n");
 	time = System.currentTimeMillis();
 	set_node_sketch();
 	coarse_node_infl = new int[C.H.W_size()];
 	marked = new BitSet(C.H.W_size());
 	print("Running influence maximization on coarsened graph");
 	coarse_sketch();
-	print("Time to IM on original graph "+(System.currentTimeMillis()-time)/1000.0+ " seconds");
+	print("Time to run IM on coarsened graph "+(System.currentTimeMillis()-time)/1000.0+ " seconds\n");
 	compare_og_to_coarse();
     }
     /**
