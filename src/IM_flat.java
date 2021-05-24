@@ -173,7 +173,7 @@ public class IM_flat {
         count_sketches = 0;
         Random gen_rnd = new Random();
 	while(weight_of_current_index < R){
-	    int v = gen_rnd.nextInt(c_n-1);
+	    int v = gen_rnd.nextInt(c_n);
 	    marked.clear();
 	    coarse_BFS(v,marked);
 	    int total_out_degree = 0;
@@ -213,6 +213,7 @@ public class IM_flat {
 	while (!queue.isEmpty()) {
             int u = queue.remove();
 	    HashSet<Integer> u_neighbours = C.H.F.get(Integer.valueOf(u));
+	    if (u_neighbours == null) continue;
 	    for(Integer uu: u_neighbours){
 		Pair getme = new Pair(u, uu);
 		int weight = C.H.q.get(getme);
