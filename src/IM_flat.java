@@ -6,6 +6,7 @@
  * Adaptation: May 20th 2021, Joe Howie 
  *
  */
+import java.text.DecimalFormat;
 import java.util.ArrayDeque;
 import java.util.HashSet;
 import java.util.BitSet;
@@ -23,7 +24,7 @@ public class IM_flat {
     long m;
     //String basename;
     double  beta;
-    int nMAX = 175000000 * 8; // maximum possible for 16 GB main memory --- divided by 8 to make 2GB
+    int nMAX = 175000000 ; // maximum possible for 16 GB main memory --- divided by 8 to make 2GB
     BitSet marked, sk_gone, nodes_gone;
     int[] sketches;
     int[] nodes;
@@ -31,6 +32,7 @@ public class IM_flat {
     int[] coarse_node_infl;
     int[] coarse_infl;
     int[] infl;
+    double og_infl, co_infl;
     int count_sketches; // the length of sketches and nodes arrays
     /**
      */
@@ -42,25 +44,34 @@ public class IM_flat {
     public IM_flat(String basename, Double beta, int k, int r) throws Exception {
 	long time = System.currentTimeMillis();
 	this.C = new Coarsen(basename, r);
+
 	print("Sampling the graph "+r+" times.");
 	print("Time to coarsen graph "+(System.currentTimeMillis()-time)/1000.0+ " seconds");
-	//this.G = ArcLabelledImmutableGraph.load("graphs/"+basename+".w");
+	DecimalFormat dec = new DecimalFormat("#.###");
+	print("Results for "+basename+" coarsening");
+	print("|V| = "+ dec.format(C.nodes)+", |E| = "+ dec.format(C.edges));
+	print("|F| = " + dec.format(C.H.F_size()) + ", |F|/|E| = " + dec.format(C.getEdgeRatio()) + ", |W| = "+ dec.format(C.H.W_size()) + ", |W|/|V| = " + dec.format(C.getVertexRatio()));
+	
+	
 	this.n = C.nodes;
 	this.m = C.edges;
-        //this.basename = basename;
-        this.beta = beta;
+	this.beta = beta;
         this.k = k;
-        print("beta = " + beta);
-        print("k = " + k);
+
+	print("n = "+n+", m = "+m);
+        print("beta = " + beta+", k = " + k);
+	
 	time = System.currentTimeMillis();
 	marked = new BitSet(n);
 	node_infl = new int[n];
 	infl = new int[k];
 	coarse_infl = new int[k];
 	set_node_sketch();
+
 	print("Running influence maximization on original graph");
     	get_sketch();
 	print("Time to run IM on original graph "+(System.currentTimeMillis()-time)/1000.0+ " seconds\n");
+
 	time = System.currentTimeMillis();
 	set_node_sketch();
 	coarse_node_infl = new int[C.H.W_size()];
@@ -69,6 +80,7 @@ public class IM_flat {
 	coarse_sketch();
 	print("Time to run IM on coarsened graph "+(System.currentTimeMillis()-time)/1000.0+ " seconds\n");
 	compare_og_to_coarse();
+	getInfl();
     }
     /**
      * 
@@ -86,7 +98,7 @@ public class IM_flat {
 	    for (int j = 0; j < coarse_infl.length; j++)
 		if(where_the_infl[i]==coarse_infl[j])
 		    print("Number " +i+ " influencer "+infl[i]+" lives in cluster "+coarse_infl[j]+", the number "+j+" cluster influencer");
-			
+	print("");			
     }
     /**
      */
@@ -101,7 +113,7 @@ public class IM_flat {
     }
     private void get_sketch() {
 	double R = beta * k * m * Math.log(n);
-	print(R);
+	print("R = "+R);
 	double weight_of_current_index = 0.0;
         int sketch_num = 0;
 	long startTime = System.currentTimeMillis();
@@ -133,7 +145,7 @@ public class IM_flat {
         double coeff = 1.0 * n/sketch_num;
         sk_gone = new BitSet(sketch_num);
         nodes_gone = new BitSet(count_sketches);
-        get_seeds(sketches, nodes, node_infl, k, count_sketches, sketch_num, set_infl, coeff, sk_gone, nodes_gone, n, infl);
+        get_seeds(sketches, nodes, node_infl, k, count_sketches, sketch_num, set_infl, coeff, sk_gone, nodes_gone, n, infl, true);
 	double getSeeds = (System.currentTimeMillis() - startSeeds)/1000.0;
 	print("");
         print("Calculating seeds took " + getSeeds + " seconds");
@@ -182,8 +194,10 @@ public class IM_flat {
 	    for (int u = marked.nextSetBit(0); u >= 0; u = marked.nextSetBit(u+1)){
 		sketches[count_sketches + iteration] = sketch_num;
                 nodes[count_sketches + iteration]  = u;
+
                 coarse_node_infl[u] = coarse_node_infl[u] + 1;
-                iteration = iteration + 1;
+		
+		iteration = iteration + 1;
 		total_out_degree = total_out_degree + C.getOutDegree(u);
 	    }
 	    weight_of_current_index = weight_of_current_index + total_out_degree;
@@ -199,10 +213,11 @@ public class IM_flat {
         double coeff = 1.0 * c_n/sketch_num;
         sk_gone = new BitSet(sketch_num);
         nodes_gone = new BitSet(count_sketches);
-        get_seeds(sketches, nodes, coarse_node_infl, k, count_sketches, sketch_num, set_infl, coeff, sk_gone, nodes_gone, c_n, coarse_infl);
+        get_seeds(sketches, nodes, coarse_node_infl, k, count_sketches, sketch_num, set_infl, coeff, sk_gone, nodes_gone, c_n, coarse_infl, false);
 	double getSeeds = (System.currentTimeMillis() - startSeeds)/1000.0;
 	print("");
         print("Calculating seeds took " + getSeeds + " seconds");
+	
     }
     /**
      */
@@ -239,7 +254,8 @@ public class IM_flat {
 			   BitSet sk_gone,
 			   BitSet nodes_gone,
 			   int num_nodes,
-			   int [] tops) {
+			   int [] tops,
+			   boolean flag) { // flag = true iff og graph 
 	// Calculating the node with max influence
         int infl_max = 0;
         int max_node = 0;
@@ -248,13 +264,18 @@ public class IM_flat {
 		infl_max = node_infl[v];
 		max_node = v;
 	    }
-        }
+	}
 	tops[k-k_left] = max_node;
 	set_infl = set_infl + infl_max * coeff;
 	print(max_node +", Its Influence = " + infl_max);
 	// Stopping condition: no need to re-calculate the influence, if we already got the k seeds
         if((k_left - 1)==0) {
-            print("Set Influence = " + set_infl);
+	    if(flag)
+		og_infl = set_infl;
+		//print("Set Influence = " + set_infl);
+	    else
+		co_infl = set_infl;
+	    
             return;
         }
 	// Re-calculating the influence of the remaining nodes: remove max node and the sketches it participated in
@@ -290,8 +311,18 @@ public class IM_flat {
             }
         }
 	nodes_gone.set(max_node);
-	get_seeds(iSketch, iNode, node_infl, k_left-1, count_sketches, sketch_num, set_infl, coeff, sk_gone, nodes_gone, num_nodes, tops);
-    }    
+	get_seeds(iSketch, iNode, node_infl, k_left-1, count_sketches, sketch_num, set_infl, coeff, sk_gone, nodes_gone, num_nodes, tops, flag);
+    }
+    /**
+     */
+    public void getInfl() throws Exception{
+	double norm_og = og_infl/n;
+	double norm_co = co_infl/C.H.W_size();
+	print("normalized by number of nodes, |V| and |W|");
+	print("Set Influence of original = " + norm_og);
+	print("Set Influence of coarsened = " + norm_co);
+	print("Ratio = "+ norm_co/norm_og);
+    }
     /**
      */
     public static void main(String[] args) throws Exception {
