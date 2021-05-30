@@ -1,4 +1,5 @@
 #!/bin/bash
+#ex: genPG.sh 
 
 pat1=.obl
 web_path=./webgraph/*$pat1

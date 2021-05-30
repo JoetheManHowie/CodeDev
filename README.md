@@ -14,6 +14,7 @@ _Note: for each program an example on how to run the code is given in the top co
 - `edgelist_to_ALIG.sh` which converts a .edgelist to all the files needed for an ArcLabelledImmutableGraph. 
 - `MaxInfluence.java` takes an ArcLabelledImmutableGraph and finds the k seed nodes to acheive maximum influence. Can run on a whole directory with `run_maxInfluence.sh` given path to directory/
 
+_Note, `Pair.java` is a helper class for the coarsen algorithm_
 
 Installation:
 --------------
