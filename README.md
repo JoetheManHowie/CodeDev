@@ -29,17 +29,17 @@ Compile command: `javac -cp "lib/*" -d bin src/*.java`
 
 _Note: The compilecommand is included at the beginning of each shell script._
 
-_Note: The .edgelist files are files of text with the directed edges and their probability from 0 to 1000. Furthermore, .sorted is the sorted vrsion of .edgelist. These convensions are assumed in the shell scripts, other extensions are ignored._
+_Note: The .edgelist files are files of text with the directed edges and their probability from 1 to 1000. Furthermore, .sorted is the sorted vrsion of .edgelist. These convensions are assumed in the shell scripts, other extensions are ignored._
 
 
 
 1) To get webgraphs, you can use `./getWG.sh <basename>` and download the four files from `http://law.di.unimi.it/datasets.php` and makes the .obl file.
 
-2) From the .obl, you can use `./genPG.sh` to generate the edgelists (with weight distributions tri and exp) for each webgraph in the directory webgraph/. This script will also generate the .sorted, .graph, .offset, .properties, and the .w files as well.
+2) From the .obl, you can use `./genPG.sh` to generate the edgelists (with weight distributions tri and exp) for each webgraph in the directory webgraph/. This script will also generate the .sorted, .graph, .offset, .properties, and the .w files as well which are the files associated ArcLabelledImmutableGraph files.
 
 3) To get a coarsened summary based on SCC, you can run `./run_coarsen.sh <stack size> <heap size> <r> <path/>` which will make the _summary.edgelist file for each ArcLabelledImmutableGraph in `<path/>`.
 
-4) To make an ArcLabelledImmutableGraph from a .edgelist
+4) To make an ArcLabelledImmutableGraph from a .edgelist file, you can run `edgelist_to_ALIG.sh <path/>` which will convert all the .edgelist files in `<path/>` to the seven ArcLabelledImmutableGraph files.
 
 Coarsen Summary:
 ----------------
