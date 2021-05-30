@@ -1,10 +1,10 @@
 #!/bin/bash
 
-#run_coarsen.sh <stack size> <heap size> <r>
+#run_coarsen.sh <stack size> <heap size> <r> <path/>
 
 javac -cp "lib/*" -d bin src/*.java
 
-graph_path=./graphs/
+graph_path=$4/
 log_path=./log/
 pat1=.sorted
 
