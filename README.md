@@ -26,7 +26,12 @@ Installation:
 Compiling and Running (Shell Scripts):
 --------------------------------------
 Compile command: `javac -cp "lib/*" -d bin src/*.java`
+
 _Note: This is included at te beginning of each shell script._
+
+1) To get webgraphs, you can use `./getWG.sh <basename>` and download the four files from `http://law.di.unimi.it/datasets.php` and makes the .obl file.
+
+2) From the .obl, you can use `./genPG.sh` to generate the edgelists (with weight distributions tri and exp) for each webgraph in the directory webgraph/. This script will also generate the .sorted, .graph, .offset, .properties, and the .w files as well.
 
 Coarsen Summary:
 ----------------
