@@ -1,5 +1,5 @@
 #!/bin/bash
-
+# ex:
 
 pat=.edgelist
 cd coarsened_graphs/
