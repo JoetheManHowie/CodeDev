@@ -5,6 +5,7 @@
 #*
 *old*
 *temp*
+coarsened_graphs/
 py_scripts/
 bin/
 log/
