@@ -6,7 +6,7 @@ _This repo has java programs to coarsen webgraphs for Influence maximization ana
 Java and Shell files:
 ---------------------
 
-- 
+- `getWG.sh` grabs the four webgraph file needed from `http://law.di.unimi.it/datasets.php` given a basename.
 - `Coarsen.java`, uses `run_coarsen.sh` to execute on a directory of ArcLabelledImmutableGraphs webgraphs.   
 -
 -
