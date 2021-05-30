@@ -1,8 +1,7 @@
 # Two main functions:
 ------------------------
 
- _This repo has java programs to coarsen webgraphs for Influence maximization analysis.
- _The purpose of the summary is to shorten the time that calculating the influence takes.
+_ _This repo has java programs to coarsen webgraphs for Influence maximization analysis. The purpose of the summary is to shorten the time that calculating the influence takes.__
 
 Java and Shell files:
 ---------------------
