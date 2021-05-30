@@ -7,6 +7,7 @@ Java and Shell files:
 ---------------------
 
 - 
+- Coarsen.java, uses run_coarsen.sh to execute on a directory of ArcLabelledImmutableGraphs webgraphs.   
 -
 -
 - 
