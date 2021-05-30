@@ -25,7 +25,8 @@ Installation:
 
 Compiling and Running (Shell Scripts):
 --------------------------------------
-
+Compile command: `javac -cp "lib/*" -d bin src/*.java`
+_Note: This is included at te beginning of each shell script._
 
 Coarsen Summary:
 ----------------

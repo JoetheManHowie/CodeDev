@@ -1,6 +1,8 @@
 #!/bin/bash
 #ex: genPG.sh 
 
+javac -cp "lib/*" -d bin src/*.java
+
 pat1=.obl
 web_path=./webgraph/*$pat1
 pat2=.edgelist

@@ -1,6 +1,8 @@
 #!/bin/bash
 # ex: edgelist_to_ALIG <path>
 
+javac -cp "lib/*" -d bin src/*.java
+
 pat=.edgelist
 cd $1/ #coarsened_graphs/
 for graph in ./*$pat

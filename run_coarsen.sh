@@ -2,11 +2,7 @@
 
 #run_coarsen.sh <stack size> <heap size> <r>
 
-echo Compiling ...
-
 javac -cp "lib/*" -d bin src/*.java
-
-echo Code Successfully Compiled!
 
 graph_path=./graphs/
 log_path=./log/

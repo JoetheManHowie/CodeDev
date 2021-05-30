@@ -1,11 +1,10 @@
 #!/bin/bash
-
-
 # run_maxInfluence.sh <stack> <heap> <beta> <k> <path>
+
+javac -cp "lib/*" -d bin src/*.java
 
 path=$5
 pat=.sorted
-javac -cp "lib/*" -d bin src/*.java
 
 for graph in ./$path/*$pat
 do
