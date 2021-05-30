@@ -5,6 +5,7 @@
  *
  * Adaptation: May 29th 2021, Joe Howie 
  *
+ * ex: java -Xss1g -Xmx4g -cp "bin/":"lib/*" MaxInfluence <path/> <basename> <beta> <k> 
  */
 import java.text.DecimalFormat;
 import java.util.ArrayDeque;
@@ -39,13 +40,13 @@ public class MaxInfluence {
     }
     /**
      */
-    public MaxInfluence(String basename, Double beta, int k) throws Exception {
+    public MaxInfluence(String path, String basename, Double beta, int k) throws Exception {
 	long time = System.currentTimeMillis();
-	this.G = ArcLabelledImmutableGraph.load("graphs/"+basename+".w");
+	this.G = ArcLabelledImmutableGraph.load(path+basename+".w");
 	print("Running Influence Maximization on "+basename);
 	
 	this.n = G.numNodes();
-	this.m = G.numNodes();
+	this.m = G.numArcs();
 	this.beta = beta;
         this.k = k;
 
@@ -206,20 +207,14 @@ public class MaxInfluence {
     /**
      */
     public static void main(String[] args) throws Exception {
-	long startTime = System.currentTimeMillis();
-	long estimatedTime;
         if(args.length < 4) {
-            print("Specify: basename, beta, k, r");
+            print("Specify: path basename, beta, k");
             System.exit(1);
         }
-        String basename  = args[0];
-	double beta = Double.valueOf(args[1]);
-        int k = Integer.valueOf(args[2]);
-	int r = Integer.valueOf(args[3]);
-	//for (int i = 0; i<args.length;i++)
-	//    print(args[i]);
-        MaxInfluence imfl = new MaxInfluence(basename, beta, k);
-	estimatedTime = System.currentTimeMillis() - startTime;
-	print("Time elapsed = " + estimatedTime /(1000.0) + " sec");
+	String path  = args[0];
+        String basename  = args[1];
+	double beta = Double.valueOf(args[2]);
+        int k = Integer.valueOf(args[3]);
+        MaxInfluence imfl = new MaxInfluence(path, basename, beta, k);
     }
 }

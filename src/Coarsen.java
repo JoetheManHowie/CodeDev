@@ -40,7 +40,7 @@ public class Coarsen{
 	makeCoarse(); // after this, we have FU (the final intersection of all the sa), and its SCC
 	//print("intersections done");
 	H = new VWIG(pie);
-
+	save_to_file();
 	//H.see_bag();
 	//H.print_F();
 	//H.print_q();
@@ -52,10 +52,20 @@ public class Coarsen{
 	else
 	    return set.size();
     }
-    public void SaveAsArcLabelledGraph(){
-	// -- not needed now
-	// create a arcLabelledgraph of the coarsened graph with probabilities
-	// save it to graphs
+    public void save_to_file(){
+	try {
+	    FileWriter writer = new FileWriter("coarsened_graphs/"+basename+"_summary.edgelist");
+	    for(Pair pt: H.q.keySet()){
+		writer.write(pt.i+"\t"+pt.j+"\t"+H.q.get(pt)+"\n");
+	    }
+	    writer.close();
+	    // -- not needed now
+	    // create a arcLabelledgraph of the coarsened graph with probabilities
+	    // save it to graphs
+	}
+	catch (IOException e){
+	    e.printStackTrace();
+	}
     }
     public double getVertexRatio() throws Exception{
 	double ws = H.W_size();
@@ -260,25 +270,6 @@ public class Coarsen{
     /**
      * for hash keys, I dislike the Integer class, but here we are..you may get a deprecated warning its fine.
      */
-    /*
-    public class Pair{
-	private Integer i;
-	private Integer j;
-	public Pair(int i, int j){
-	    this.i = new Integer(Integer.valueOf(i));
-	    this.j = new Integer(Integer.valueOf(j));
-	}
-	// src: https://bit.ly/3eK1P1B
-	@Override
-	public int hashCode(){
-	    return i.hashCode() ^ j.hashCode();
-	}
-	@Override
-	public boolean equals(Object obj){
-	    return (obj instanceof Pair ) && ((Pair) obj).i.equals(i) && ((Pair) obj).j.equals(j);
-	}
-    }
-    */
     public class VWIG {
 	SCC scc;
 	HashMap<Integer, HashSet<Integer>> bag;

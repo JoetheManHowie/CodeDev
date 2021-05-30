@@ -18,3 +18,4 @@ do
     echo $name
     java -Xss$1g -Xmx$2g -cp "bin":"lib/*" Runner $name $3 > $log_path$name.results  
 done
+rm $graph_path*_temp*
