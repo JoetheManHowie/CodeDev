@@ -1,8 +1,8 @@
 #!/bin/bash
-# ex:
+# ex: edgelist_to_ALIG <path>
 
 pat=.edgelist
-cd coarsened_graphs/
+cd $1/ #coarsened_graphs/
 for graph in ./*$pat
 do
     name=$(basename $graph $pat)
