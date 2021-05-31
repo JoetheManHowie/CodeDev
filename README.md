@@ -41,12 +41,5 @@ _Note: The .edgelist files are files of text with the directed edges and their p
 
 4) To make an ArcLabelledImmutableGraph from a .edgelist file, you can run `edgelist_to_ALIG.sh <path/>` which will convert all the .edgelist files in `<path/>` to the seven ArcLabelledImmutableGraph files.
 
-Coarsen Summary:
-----------------
-
-
-
-
-Influence Maximization:
--------------------------
-
+5) Finally, to generate the Influence Maximization, you can run `run_maxInfluence.sh <stack> <heap> <beta> <k> <path/>` which will find the `<k>` seed nodes for each ArcLabelledImmutableGraph in the `<path/>` and prints the information to the terminal (which my change soon, and be saved to a file called .results).
+ 
