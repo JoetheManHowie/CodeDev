@@ -37,9 +37,9 @@ _Note: The .edgelist files are files of text with the directed edges and their p
 
 2) From the .obl, you can use `./genPG.sh` to generate the edgelists (with weight distributions tri and exp) for each webgraph in the directory webgraph/. This script will also generate the .sorted, .graph, .offset, .properties, and the .w files as well which are the files associated ArcLabelledImmutableGraph files.
 
-3) To get a coarsened summary based on SCC, you can run `./run_coarsen.sh <stack size> <heap size> <r> <path/>` which will make the _summary.edgelist file for each ArcLabelledImmutableGraph in `<path/>`.
+3) To get a coarsened summary based on SCC, you can run `./run_coarsen.sh <stack size> <heap size> <r> <path/>` which will make the _summary.edgelist file for each ArcLabelledImmutableGraph in `<path/>`. The output is saved to a .results file in the log/ directory.
 
 4) To make an ArcLabelledImmutableGraph from a .edgelist file, you can run `edgelist_to_ALIG.sh <path/>` which will convert all the .edgelist files in `<path/>` to the seven ArcLabelledImmutableGraph files.
 
-5) Finally, to generate the Influence Maximization, you can run `run_maxInfluence.sh <stack> <heap> <beta> <k> <path/>` which will find the `<k>` seed nodes for each ArcLabelledImmutableGraph in the `<path/>` and prints the information to the terminal (which my change soon, and be saved to a file called .results).
+5) Finally, to generate the Influence Maximization, you can run `run_maxInfluence.sh <stack> <heap> <beta> <k> <path/>` which will find the `<k>` seed nodes for each ArcLabelledImmutableGraph in the `<path/>` and prints the information to a .im file in the log/ directory.
  
