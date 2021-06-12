@@ -13,3 +13,4 @@ do
     java -Xss$1g -Xmx$2g -cp "bin/":"lib/*" MaxInfluence $path $name $3 $4 > $log_path$name.im  
 done
 
+#rm ./$path/*sketch*

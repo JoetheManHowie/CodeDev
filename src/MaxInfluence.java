@@ -25,7 +25,7 @@ public class MaxInfluence {
     long m;
     //String basename;
     double  beta;
-    int nMAX = 175000000 ; // maximum possible for 16 GB main memory --- divided by 8 to make 2GB
+    int nMAX = 175000000*4 ; // maximum possible for 16 GB main memory --- divided by 8 to make 2GB
     BitSet marked, sk_gone, nodes_gone;
     int[] sketches;
     int[] nodes;
