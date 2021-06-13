@@ -1,6 +1,7 @@
 /*
  * Joe Howie May 12th 2021
  */
+import java.text.DecimalFormat; 
 import java.util.*;
 import java.util.concurrent.*;
 import java.io.*;
@@ -37,8 +38,10 @@ public class Alg2{
 	this.PG = ArcLabelledImmutableGraph.load("graphs/"+basename+".w");
 	this.edges = (int)PG.numArcs();
 	this.nodes = PG.numNodes();
+
 	makeCoarse(); // after this, we have FU (the final intersection of all the sa), and its SCC
 	//print("intersections done");
+
 	H = new VWIG(pie);
 	save_to_file();
 	//H.see_bag();
@@ -59,9 +62,6 @@ public class Alg2{
 		writer.write(pt.i+"\t"+pt.j+"\t"+H.q.get(pt)+"\n");
 	    }
 	    writer.close();
-	    // -- not needed now
-	    // create a arcLabelledgraph of the coarsened graph with probabilities
-	    // save it to graphs
 	}
 	catch (IOException e){
 	    e.printStackTrace();
@@ -76,8 +76,7 @@ public class Alg2{
 	return fs/this.edges*100;
     }
     public void makeCoarse() throws Exception{
-	pie = new SCC();
-	
+	pie = new SCC();	
 	final IncrementalImmutableSequentialGraph gg = new IncrementalImmutableSequentialGraph();
 	ExecutorService executor = Executors.newSingleThreadExecutor();
 	final Future<Void> future = executor.submit(new Callable<Void>(){
@@ -86,7 +85,6 @@ public class Alg2{
 		    return null;
 		}
 	    });
-	
 	for (int v = 0; v<nodes; v++){
 	    ArrayList<Integer> edges = new ArrayList<Integer>();
 	    int [] v_neighbours = PG.successorArray(v);
@@ -95,6 +93,7 @@ public class Alg2{
 	    for (int i = 0; i<v_degs; i++){
 		int u = v_neighbours[i];
 		Label label = v_labels[i];
+
 		edges.add(u);
 		
 		int [] arr = new int[edges.size()];
@@ -105,11 +104,14 @@ public class Alg2{
 		 }
 		gg.add(arr, 0, arr.length);
 	    }
-	    gg.add(IncrementalImmutableSequentialGraph.END_OF_GRAPH);
-	    future.get();
-	    executor.shutdown();
 	}
+	gg.add(IncrementalImmutableSequentialGraph.END_OF_GRAPH);
+	future.get();
+	executor.shutdown();
+	
+
 	P_i = new InstanceGraph();
+
 	pie = new SCC(P_i);
     }
     // inner class 1
@@ -394,6 +396,12 @@ public class Alg2{
 	String basename = args[0];
 	print("Running: "+basename);
 	Alg2 a2 = new Alg2(basename);
-	print("Time Elapsed = "+(System.currentTimeMillis() - time)/1000.0+ " seconds");	
+	DecimalFormat dec = new DecimalFormat("#.###");
+	print("Results for "+basename);
+	print("|V| = "+ dec.format(a2.nodes)+", |E| = "+ dec.format(a2.edges));
+	print("|F| = " + dec.format(a2.H.F_size()) + ", |F|/|E| = " + dec.format(a2.getEdgeRatio()) + ", |W| = "+ dec.format(a2.H.W_size()) + ", |W|/|V| = " + dec.format(a2.getVertexRatio()));
+	
+	print("Time Elapsed = "+(System.currentTimeMillis() - time)/1000.0+ " seconds");
+	
     }
 }
