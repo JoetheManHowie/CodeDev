@@ -34,6 +34,6 @@ public class getRatios{
 	double E = (double)og.numArcs();
 	double F = (double)su.numArcs();
 
-	print("|W| = "+W+" |F| = "+F+" |W|/|V| = "+dec.format(W/V)+" |F|/|E| = "+dec.format(F/E));
+	print("|W| = "+W+" |F| = "+F+" |W|/|V| = "+dec.format(W/V*100)+" |F|/|E| = "+dec.format(F/E*100));
     }
 }
