@@ -30,9 +30,9 @@ public class getRatios{
 	ArcLabelledImmutableGraph su = ArcLabelledImmutableGraph.load(basename1+".w");
 	
 	double V = (double)og.numNodes();
-	double W = (double)su.numNodes();
+	int W = su.numNodes();
 	double E = (double)og.numArcs();
-	double F = (double)su.numArcs();
+	long F = su.numArcs();
 
 	print("|W| = "+W+" |F| = "+F+" |W|/|V| = "+dec.format(W/V*100)+" |F|/|E| = "+dec.format(F/E*100));
     }
