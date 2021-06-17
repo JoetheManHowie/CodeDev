@@ -26,8 +26,8 @@ public class getRatios{
 	String basename0 = args[0];
 	String basename1 = args[1];
 		
-	ArcLabelledImmutableGraph og = ArcLabelledImmutableGraph.load("graph/"+basename0+".w");
-	ArcLabelledImmutableGraph su = ArcLabelledImmutableGraph.load("graph/"+basename1+".w");
+	ArcLabelledImmutableGraph og = ArcLabelledImmutableGraph.load(basename0+".w");
+	ArcLabelledImmutableGraph su = ArcLabelledImmutableGraph.load(basename1+".w");
 	
 	double V = (double)og.numNodes();
 	double W = (double)su.numNodes();
