@@ -14,4 +14,4 @@ do
     echo $name
     java -Xss$1g -Xmx$2g -cp "bin":"lib/*" Alg2 $name >  $log_path$name.alg2res
 done
-rm $graph_path*_temp*
+rm $graph_path*_t.*

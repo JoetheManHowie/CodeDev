@@ -19,13 +19,15 @@ import it.unimi.dsi.webgraph.LazyIntIterator;
  * which help construct the coarsened graph from the probabistic graph
  */
 public class Alg2{
-    String ext = "_temp";
+    String ext = "_t";
     ArcLabelledImmutableGraph PG;
+    ImmutableGraph GT;
     int nodes;
     int edges;
     String basename;
     int r;
-    InstanceGraph P_i;
+
+    //    GraphAndTrans P_i;
     SCC pie;
     VWIG H; //def from 4.1 (VWIG: Vertex Weighted Influence Graph)
     // print like python & matlab
@@ -40,13 +42,18 @@ public class Alg2{
 	this.nodes = PG.numNodes();
 
 	makeCoarse(); // after this, we have FU (the final intersection of all the sa), and its SCC
-	//print("intersections done");
-
+	GT = ImmutableGraph.loadMapped("graphs/"+basename+ext);
+	long tim = System.currentTimeMillis();
+	pie = new SCC();
+	print("Time to get SCC "+(System.currentTimeMillis() - tim )/1000.0+" seconds");
+	print("----------------------------");
+	
+	long time = System.currentTimeMillis();
 	H = new VWIG(pie);
+	print("Time to make the coarsened data structure "+(System.currentTimeMillis() - tim)/1000.0+ " seconds");
+	print("----------------------------");
 	save_to_file();
-	//H.see_bag();
-	//H.print_F();
-	//H.print_q();
+
     }
     public int getOutDegree(Integer u){
 	HashSet<Integer> set = H.F.get(u);
@@ -76,7 +83,21 @@ public class Alg2{
 	return fs/this.edges*100;
     }
     public void makeCoarse() throws Exception{
-	pie = new SCC();	
+	long time = System.currentTimeMillis();
+
+	@SuppressWarnings("unchecked")
+	    LinkedList<Integer> [] adj_list = new LinkedList[nodes];
+	for (int a = 0; a< nodes; a++)
+	    adj_list[a] = new LinkedList<Integer>();	
+	for (int v = 0; v<nodes; v++){
+	    ArrayList<Integer> edges = new ArrayList<Integer>();
+	    int [] v_neighbours = PG.successorArray(v);
+	    int v_degs = PG.outdegree(v);
+	    for (int i = 0; i<v_degs; i++){
+		int u = v_neighbours[i];
+		adj_list[u].add(v);
+	    }
+	}
 	final IncrementalImmutableSequentialGraph gg = new IncrementalImmutableSequentialGraph();
 	ExecutorService executor = Executors.newSingleThreadExecutor();
 	final Future<Void> future = executor.submit(new Callable<Void>(){
@@ -85,99 +106,35 @@ public class Alg2{
 		    return null;
 		}
 	    });
-	for (int v = 0; v<nodes; v++){
-	    ArrayList<Integer> edges = new ArrayList<Integer>();
-	    int [] v_neighbours = PG.successorArray(v);
-	    Label[] v_labels = PG.labelArray(v);
-	    int v_degs = PG.outdegree(v);
-	    for (int i = 0; i<v_degs; i++){
-		int u = v_neighbours[i];
-		Label label = v_labels[i];
-
-		edges.add(u);
-		
-		int [] arr = new int[edges.size()];
-		int count = 0;
-		for (Integer a: edges){
-		    arr[count] = a;
-		    count++;
-		 }
-		gg.add(arr, 0, arr.length);
-	    }
+	for(LinkedList<Integer> a: adj_list){
+	    int [] dumdum = new int[a.size()];
+	    for (int i = 0; i<a.size(); i++)
+		dumdum[i] = a.get(i);
+	    Arrays.sort(dumdum);
+	    gg.add(dumdum, 0, dumdum.length);
 	}
 	gg.add(IncrementalImmutableSequentialGraph.END_OF_GRAPH);
 	future.get();
 	executor.shutdown();
-	
-
-	P_i = new InstanceGraph();
-
-	pie = new SCC(P_i);
+	print("----------------------------");
+	print("Time to make Immutable graph "+(System.currentTimeMillis() - time)/1000.0+" seconds");
+	print("----------------------------");
     }
-    // inner class 1
-    /**
-     * This class holds the graph and transpose graph for a sampling of PG
-     */
-    public class InstanceGraph{
-	ImmutableGraph graph;
-	ImmutableGraph graphT;
-	public InstanceGraph() throws Exception{
-	    this.graph = ImmutableGraph.loadMapped("graphs/"+basename+ext);
-	    getTrans();
-	}
-	public void getTrans() throws Exception{
-	    @SuppressWarnings("unchecked")
-		LinkedList<Integer> [] adj_list = new LinkedList[nodes];
-	    for (int a = 0; a< nodes; a++)
-		adj_list[a] = new LinkedList<Integer>();
-	    for (int v = 0; v<nodes; v++){
-		int [] v_neighbours = graph.successorArray(v);
-		int v_degs = graph.outdegree(v);
-		for (int i = 0; i<v_degs; i++){
-		    int u = v_neighbours[i];
-		    adj_list[u].add(v);
-		}
-	    }
-	    final IncrementalImmutableSequentialGraph gg = new IncrementalImmutableSequentialGraph();
-	    ExecutorService executor = Executors.newSingleThreadExecutor();
-	    final Future<Void> future = executor.submit(new Callable<Void>(){
-		    public Void call() throws IOException {
-			BVGraph.store(gg, "graphs/"+basename+ext+"_t");
-			return null;
-		    }
-		});
-	    for(LinkedList<Integer> a: adj_list){
-		int [] dumdum = new int[a.size()];
-		for (int i = 0; i<a.size(); i++)
-		    dumdum[i] = a.get(i);
-		Arrays.sort(dumdum);
-		gg.add(dumdum, 0, dumdum.length);
-	    }
-	    gg.add(IncrementalImmutableSequentialGraph.END_OF_GRAPH);
-	    future.get();
-	    executor.shutdown();
-	    this.graphT = ImmutableGraph.loadMapped("graphs/"+basename+ext+"_t");
-	}
-    }
-    // inner class 2
     /**
      * This class finds the SCC of an instant graph
-     */
+     */   
+    
     public class SCC{
 	int num_scc;
 	int [] pie;
-	InstanceGraph graph;
+	
 	private Stack<Integer> stack;
 	private boolean[] visited;
-	public SCC(InstanceGraph graph) throws Exception{
-	    pie = new int[nodes];
-	    this.graph = graph;
-	    findSCC();
-	}
 	public SCC() throws Exception{
 	    pie = new int[nodes];
-	    blankSCC();
+	    findSCC();
 	}
+
 	private void blankSCC() throws Exception{
 	    for (int i = 0; i < nodes; i++)
 		pie[i] = 0;
@@ -193,15 +150,12 @@ public class Alg2{
 	    
 	    for (int i = 0; i < nodes; i++){
 		Pair pair  = new Pair(this.pie[i], other.pie[i]);
-		//print(pair.i+" "+pair.j);
-		//print(map.containsKey(pair));
 		if (!map.containsKey(pair)){
 		    //print(pair.i+" "+pair.j);
 		    map.put(pair, ll);
 		    ll++;
 		}
 		M[i] = map.get(pair);
-		//print("M "+M[i]);
 	    }
 	    int temp = 0;
 	    for (int i = 0; i<nodes; i++){
@@ -227,8 +181,6 @@ public class Alg2{
 		    num_scc++;
 		}
 	    }
-	    //print("Number of SCC: "+num_scc);
-	    
 	}
 	private void set_visit_to_false(){
 	    for(int i = 0; i<nodes; i++)
@@ -237,8 +189,8 @@ public class Alg2{
 	private void DFS(int v){
 	    visited[v] = true;
 	    pie[v] = num_scc;
-	    int [] v_neighbours = graph.graphT.successorArray(v); 
-	    int v_degs = graph.graphT.outdegree(v);
+	    int [] v_neighbours = GT.successorArray(v); 
+	    int v_degs = GT.outdegree(v);
 	    for (int i = 0; i<v_degs; i++){
 		int u = v_neighbours[i];
 		if (visited[u] == false)
@@ -247,8 +199,8 @@ public class Alg2{
 	}
 	private void fillOrder(int v){
 	    visited[v] = true;
-	    int [] v_neighbours = graph.graph.successorArray(v);
-	    int v_degs = graph.graph.outdegree(v);
+	    int [] v_neighbours = PG.successorArray(v);
+	    int v_degs = PG.outdegree(v);
 	    for (int i = 0; i<v_degs; i++){
 		int u = v_neighbours[i];
 		if(visited[u] == false)
@@ -257,6 +209,7 @@ public class Alg2{
 	    stack.push(Integer.valueOf(v));
 	}
     }
+ 
     /**
      * for hash keys, I dislike the Integer class, but here we are..you may get a deprecated warning its fine.
      */
@@ -400,7 +353,7 @@ public class Alg2{
 	print("Results for "+basename);
 	print("|V| = "+ dec.format(a2.nodes)+", |E| = "+ dec.format(a2.edges));
 	print("|F| = " + dec.format(a2.H.F_size()) + ", |F|/|E| = " + dec.format(a2.getEdgeRatio()) + ", |W| = "+ dec.format(a2.H.W_size()) + ", |W|/|V| = " + dec.format(a2.getVertexRatio()));
-	
+	print("----------------------------");
 	print("Time Elapsed = "+(System.currentTimeMillis() - time)/1000.0+ " seconds");
 	
     }
