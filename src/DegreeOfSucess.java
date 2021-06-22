@@ -18,15 +18,14 @@ import it.unimi.dsi.webgraph.LazyIntIterator;
  * Corasen is the main class here. It contains several inner classes 
  * which help construct the coarsened graph from the probabistic graph
  */
-public class TauFail{
+public class DegreeOfSucess{
     String ext = "_t";
     ArcLabelledImmutableGraph PG;
     ImmutableGraph GT;
     int nodes;
     int edges;
     String basename;
-    int tau;
-
+    int trial;
     //    GraphAndTrans P_i;
     SCC pie;
     VWIG H; //def from 4.1 (VWIG: Vertex Weighted Influence Graph)
@@ -34,9 +33,9 @@ public class TauFail{
     public static <S> void print(S s){
 	System.out.println(s);
     }
-    public TauFail(String basename, int tau) throws Exception{
+    public DegreeOfSucess(String basename, int trial) throws Exception{
 	this.basename = basename;
-	this.tau = tau;
+	this.trial = trial;
 	this.PG = ArcLabelledImmutableGraph.load("graphs/"+basename+".w");
 	this.edges = (int)PG.numArcs();
 	this.nodes = PG.numNodes();
@@ -94,28 +93,23 @@ public class TauFail{
 	    int [] v_neighbours = PG.successorArray(v);
 	    Label [] v_labels = PG.labelArray(v);
 	    int v_degs = PG.outdegree(v);
-	    int counter = 0;
-	    int count = 0;
-	    int i = 0;
-	    HashSet<Integer> skip = new HashSet<Integer>(); 
-	    while ( ((count < tau) || counter < (v_degs * tau))){
-		//for (int i = 0; i<v_degs; i++){
+
+	    int modifier = 100;
+	    for (int i = 0; i<v_degs; i++){
 		if (i >= v_degs) break;
 		int u = v_neighbours[i];
-		if (skip.contains(u)) break; // stops inf loops
 		Label label = v_labels[i];
 		int weight = (int)label.getLong();
 		int roll = rand.nextInt(1000);
-		
-		if (roll < weight){
-		    adj_list[u].add(v);
-		    skip.add(u);
-		    //count = 0;
+		int DOS = 0; //negative for failure
+		for (int j = 0; j < trial; j++){
+		    int target = weight + modifier*DOS;
+		    if ( roll < target )
+			DOS++;
+		    else
+			DOS--;
 		}
-		else
-		    count++;
-		i = (i+1)%v_degs;
-		counter++;
+		//adj_list[u].add(v);
 	    }
 	}
 	print("done");
@@ -340,19 +334,18 @@ public class TauFail{
     public static void main(String [] args) throws Exception{
 	long time = System.currentTimeMillis();
 	if (args.length < 2){
-	    print("give a basename and tau");
+	    print("give a basename and trial");
 	    System.exit(1);
 	}
 	String basename = args[0];
-	int tau = Integer.parseInt(args[1]);
+	int trial = Integer.parseInt(args[1]);
 	print("Running: "+basename);
-	TauFail a2 = new TauFail(basename, tau);
+	DegreeOfSucess a2 = new DegreeOfSucess(basename, trial);
 	DecimalFormat dec = new DecimalFormat("#.###");
 	print("Results for "+basename);
 	print("|V| = "+ dec.format(a2.nodes)+", |E| = "+ dec.format(a2.edges));
 	print("|F| = " + dec.format(a2.H.F_size()) + ", |F|/|E| = " + dec.format(a2.getEdgeRatio()) + ", |W| = "+ dec.format(a2.H.W_size()) + ", |W|/|V| = " + dec.format(a2.getVertexRatio()));
 	print("----------------------------");
 	print("Time Elapsed = "+(System.currentTimeMillis() - time)/1000.0+ " seconds");
-	
     }
 }

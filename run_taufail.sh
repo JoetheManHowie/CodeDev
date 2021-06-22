@@ -13,6 +13,6 @@ for graph in $graph_path*$pat1
 do
     name=$(basename $graph $pat1)
     echo $name
-    java -Xss$1g -Xmx$2g -cp "bin":"lib/*" TauFail $name $tau>  $log_path$name.addrandres
+    java -Xss$1g -Xmx$2g -cp "bin":"lib/*" TauFail $name $tau>  $log_path$name.taufailres
 done
 rm $graph_path*_t.*
