@@ -1,5 +1,5 @@
 /*
- * Joe Howie May 12th 2021
+ * Joe Howie June 22nd 2021
  */
 import java.text.DecimalFormat; 
 import java.util.*;
@@ -18,14 +18,14 @@ import it.unimi.dsi.webgraph.LazyIntIterator;
  * Corasen is the main class here. It contains several inner classes 
  * which help construct the coarsened graph from the probabistic graph
  */
-public class Alg2{
+public class TauFail{
     String ext = "_t";
     ArcLabelledImmutableGraph PG;
     ImmutableGraph GT;
     int nodes;
     int edges;
     String basename;
-    int r;
+    int tau;
 
     //    GraphAndTrans P_i;
     SCC pie;
@@ -34,9 +34,9 @@ public class Alg2{
     public static <S> void print(S s){
 	System.out.println(s);
     }
-    public Alg2(String basename) throws Exception{
+    public TauFail(String basename, int tau) throws Exception{
 	this.basename = basename;
-	this.r = r;
+	this.tau = tau;
 	this.PG = ArcLabelledImmutableGraph.load("graphs/"+basename+".w");
 	this.edges = (int)PG.numArcs();
 	this.nodes = PG.numNodes();
@@ -83,6 +83,7 @@ public class Alg2{
 	return fs/this.edges*100;
     }
     public void makeCoarse() throws Exception{
+	Random rand = new Random();
 	long time = System.currentTimeMillis();
 	@SuppressWarnings("unchecked")
 	    LinkedList<Integer> [] adj_list = new LinkedList[nodes];
@@ -91,12 +92,33 @@ public class Alg2{
 	for (int v = 0; v<nodes; v++){
 	    ArrayList<Integer> edges = new ArrayList<Integer>();
 	    int [] v_neighbours = PG.successorArray(v);
+	    Label [] v_labels = PG.labelArray(v);
 	    int v_degs = PG.outdegree(v);
-	    for (int i = 0; i<v_degs; i++){
+	    int counter = 0;
+	    int count = 0;
+	    int i = 0;
+	    HashSet<Integer> skip = new HashSet<Integer>(); 
+	    while ( ((count < tau) || counter < (v_degs * tau))){
+		//for (int i = 0; i<v_degs; i++){
+		if (i >= v_degs) break;
 		int u = v_neighbours[i];
-		adj_list[u].add(v);
+		if (skip.contains(u)) break; // stops inf loops
+		Label label = v_labels[i];
+		int weight = (int)label.getLong();
+		int roll = rand.nextInt(1000);
+		
+		if (weight < roll){
+		    adj_list[u].add(v);
+		    skip.add(u);
+		    count = 0;
+		}
+		else
+		    count++;
+		i = (i+1)%v_degs;
+		counter++;
 	    }
 	}
+	print("done");
 	final IncrementalImmutableSequentialGraph gg = new IncrementalImmutableSequentialGraph();
 	ExecutorService executor = Executors.newSingleThreadExecutor();
 	final Future<Void> future = executor.submit(new Callable<Void>(){
@@ -317,13 +339,14 @@ public class Alg2{
     }
     public static void main(String [] args) throws Exception{
 	long time = System.currentTimeMillis();
-	if (args.length < 1){
-	    print("give a basename");
+	if (args.length < 2){
+	    print("give a basename and tau");
 	    System.exit(1);
 	}
 	String basename = args[0];
+	int tau = Integer.parseInt(args[1]);
 	print("Running: "+basename);
-	Alg2 a2 = new Alg2(basename);
+	TauFail a2 = new TauFail(basename, tau);
 	DecimalFormat dec = new DecimalFormat("#.###");
 	print("Results for "+basename);
 	print("|V| = "+ dec.format(a2.nodes)+", |E| = "+ dec.format(a2.edges));
