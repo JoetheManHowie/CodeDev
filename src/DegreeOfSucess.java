@@ -19,7 +19,7 @@ import it.unimi.dsi.webgraph.LazyIntIterator;
  * which help construct the coarsened graph from the probabistic graph
  */
 public class DegreeOfSucess{
-    String ext = "_t";
+    String ext = "_temp_dos";
     ArcLabelledImmutableGraph PG;
     ImmutableGraph GT;
     int nodes;
@@ -63,7 +63,7 @@ public class DegreeOfSucess{
     }
     public void save_to_file(){
 	try {
-	    FileWriter writer = new FileWriter("alg2_graphs/"+basename+"_alg2sum.edgelist");
+	    FileWriter writer = new FileWriter("dos_graphs/"+basename+"_dos.edgelist");
 	    for(Pair pt: H.q.keySet()){
 		writer.write(pt.i+"\t"+pt.j+"\t"+H.q.get(pt)+"\n");
 	    }
@@ -103,13 +103,15 @@ public class DegreeOfSucess{
 		int roll = rand.nextInt(1000);
 		int DOS = 0; //negative for failure
 		for (int j = 0; j < trial; j++){
-		    int target = weight + modifier*DOS;
+		    int target = weight + (modifier*DOS);
 		    if ( roll < target )
-			DOS++;
+			DOS = DOS + Math.max((roll/100), 1);
 		    else
-			DOS--;
+			DOS = DOS - Math.max(((roll/100) - (target/100)), 1);
 		}
-		//adj_list[u].add(v);
+		if (DOS > trial)
+		    adj_list[u].add(v);
+		
 	    }
 	}
 	print("done");

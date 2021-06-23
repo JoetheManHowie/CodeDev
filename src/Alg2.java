@@ -19,7 +19,7 @@ import it.unimi.dsi.webgraph.LazyIntIterator;
  * which help construct the coarsened graph from the probabistic graph
  */
 public class Alg2{
-    String ext = "_t";
+    String ext = "_temp_alg2";
     ArcLabelledImmutableGraph PG;
     ImmutableGraph GT;
     int nodes;
@@ -64,7 +64,7 @@ public class Alg2{
     }
     public void save_to_file(){
 	try {
-	    FileWriter writer = new FileWriter("alg2_graphs/"+basename+"_alg2sum.edgelist");
+	    FileWriter writer = new FileWriter("alg2_graphs/"+basename+"_alg2.edgelist");
 	    for(Pair pt: H.q.keySet()){
 		writer.write(pt.i+"\t"+pt.j+"\t"+H.q.get(pt)+"\n");
 	    }

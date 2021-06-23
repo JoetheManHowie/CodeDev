@@ -15,4 +15,4 @@ do
     echo $name
     java -Xss$1g -Xmx$2g -cp "bin":"lib/*" TauFail $name $tau>  $log_path$name.taufailres
 done
-rm $graph_path*_t.*
+rm $graph_path*_temp_taufail.*
